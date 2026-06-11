@@ -31,7 +31,7 @@
   <main id="top">
     <section class="hero">
       <div class="hero-copy">
-        <p class="eyebrow">Tanpa login • Tanpa database • Siap hosting</p>
+        <p class="eyebrow">Tanpa login &bull; Tanpa database &bull; Siap hosting</p>
         <h1>Analisis butir soal dari Excel, langsung jadi laporan.</h1>
         <p class="lead">ButirCerdas membaca jawaban peserta dan kunci dari template Excel, lalu menghitung skor, tingkat kesukaran, daya pembeda, validitas, reliabilitas KR-20, distraktor, dan rekomendasi.</p>
         <div class="hero-actions">
@@ -84,6 +84,7 @@
             <label>
               R tabel validitas
               <input id="validityThreshold" type="number" min="0" max="1" step="0.01" placeholder="Opsional, misal 0.36" />
+              <small class="field-hint">Kosongkan untuk kategori otomatis. Isi jika ingin membandingkan r hitung dengan r tabel.</small>
             </label>
           </div>
           <button id="downloadTemplateBtn" class="primary-btn" type="button">Download Template Excel</button>
@@ -104,6 +105,51 @@
           </label>
           <div id="messageBox" class="message-box" role="status" aria-live="polite"></div>
         </section>
+      </div>
+    </section>
+
+    <section class="content-section guide-section">
+      <div class="section-title">
+        <span>Cara Mengisi</span>
+        <h2>Format Excel yang dibaca ButirCerdas</h2>
+      </div>
+      <div class="guide-grid howto-grid">
+        <article>
+          <h3>Sheet Jawaban</h3>
+          <p>Baris pertama wajib berisi header.</p>
+          <ul>
+            <li>No, Nama, Kelas, 1, 2, 3, dan seterusnya</li>
+            <li>Kolom nomor soal boleh sampai jumlah soal terakhir</li>
+            <li>Jawaban peserta diisi A-D atau A-E sesuai pilihan</li>
+          </ul>
+        </article>
+        <article>
+          <h3>Sheet Kunci</h3>
+          <p>Berisi nomor soal dan kunci jawaban.</p>
+          <ul>
+            <li>Header wajib: Nomor dan Kunci</li>
+            <li>Jumlah nomor harus sama dengan jumlah kolom soal</li>
+            <li>Kunci tidak boleh kosong</li>
+          </ul>
+        </article>
+        <article>
+          <h3>R Tabel Validitas</h3>
+          <p>Digunakan sebagai pembanding validitas butir.</p>
+          <ul>
+            <li>Kosong: sistem memakai kategori korelasi otomatis</li>
+            <li>Diisi: valid bila r hitung lebih besar atau sama dengan r tabel</li>
+            <li>Contoh input: 0.36</li>
+          </ul>
+        </article>
+        <article>
+          <h3>Alur Analisis</h3>
+          <p>Data diproses langsung di browser.</p>
+          <ul>
+            <li>Download template, isi Excel, lalu upload</li>
+            <li>Periksa preview dan klik Hitung Analisis</li>
+            <li>Export laporan Excel atau PDF setelah hasil muncul</li>
+          </ul>
+        </article>
       </div>
     </section>
 
@@ -217,26 +263,26 @@
             <li>0.00 - 0.19 = Jelek</li>
             <li>0.20 - 0.39 = Cukup</li>
             <li>0.40 - 0.69 = Baik</li>
-            <li>≥ 0.70 = Sangat Baik</li>
+            <li>&ge; 0.70 = Sangat Baik</li>
           </ul>
         </article>
         <article>
           <h3>Validitas</h3>
           <p>Menggunakan corrected item-total correlation.</p>
           <ul>
-            <li>Jika R tabel diisi, valid bila r hitung ≥ R tabel</li>
+            <li>Jika R tabel diisi, valid bila r hitung &ge; R tabel</li>
             <li>Jika kosong, kategori memakai kekuatan korelasi</li>
           </ul>
         </article>
         <article>
           <h3>Reliabilitas</h3>
-          <p>KR-20 = k/(k-1) × (1 - Σpq / Var total).</p>
+          <p>KR-20 = k/(k-1) &times; (1 - &Sigma;pq / Var total).</p>
           <ul>
             <li>&lt; 0.20 = Sangat Rendah</li>
             <li>0.20 - 0.39 = Rendah</li>
             <li>0.40 - 0.59 = Cukup</li>
             <li>0.60 - 0.79 = Tinggi</li>
-            <li>≥ 0.80 = Sangat Tinggi</li>
+            <li>&ge; 0.80 = Sangat Tinggi</li>
           </ul>
         </article>
       </div>
@@ -244,7 +290,7 @@
   </main>
 
   <footer class="app-footer">
-    <p>ButirCerdas © 2026 • Analisis diproses di browser, tanpa login dan tanpa penyimpanan permanen.</p>
+    <p>ButirCerdas &copy; 2026 &bull; Analisis diproses di browser, tanpa login dan tanpa penyimpanan permanen.</p>
   </footer>
 
   <script src="script.js"></script>
