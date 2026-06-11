@@ -39,30 +39,41 @@
           <button class="secondary-btn" type="button" data-target="toolOverview">Lihat Alat</button>
         </div>
       </div>
-      <aside class="hero-panel" aria-label="Format data">
-        <span class="panel-label">Format data</span>
-        <strong>Matriks 1/0</strong>
-        <p>Gunakan header <b>Nama, S1, S2, S3</b>. Nilai 1 berarti benar, nilai 0 berarti salah. Semua proses berjalan di browser.</p>
+      <aside class="hero-visual" aria-label="Ilustrasi matriks data">
+        <div class="visual-header">
+          <span>Matriks Skor</span>
+          <strong>1/0</strong>
+        </div>
+        <div class="matrix-grid" aria-hidden="true">
+          <span>1</span><span>1</span><span>0</span><span>1</span><span>Σ</span>
+          <span>1</span><span>0</span><span>1</span><span>1</span><span>P</span>
+          <span>0</span><span>1</span><span>1</span><span>0</span><span>D</span>
+          <span>1</span><span>1</span><span>1</span><span>0</span><span>r</span>
+        </div>
+        <div class="visual-footer">
+          <div><span>Kesukaran</span><strong>P = B/N</strong></div>
+          <div><span>Reliabilitas</span><strong>KR-20</strong></div>
+        </div>
       </aside>
     </section>
 
     <section id="toolOverview" class="tool-overview" aria-label="Daftar alat analisis">
-      <article class="tool-card">
+      <article class="tool-card" data-target="difficultySection">
         <span>01</span>
         <h2>Tingkat Kesukaran</h2>
         <p>Melihat apakah soal tergolong sukar, sedang, atau mudah.</p>
       </article>
-      <article class="tool-card">
+      <article class="tool-card" data-target="discriminationSection">
         <span>02</span>
         <h2>Daya Pembeda</h2>
         <p>Membandingkan kelompok atas dan bawah dengan proporsi 27%.</p>
       </article>
-      <article class="tool-card">
+      <article class="tool-card" data-target="validitySection">
         <span>03</span>
         <h2>Validitas Butir</h2>
         <p>Mengukur hubungan butir soal dengan skor total terkoreksi.</p>
       </article>
-      <article class="tool-card">
+      <article class="tool-card" data-target="reliabilitySection">
         <span>04</span>
         <h2>Reliabilitas</h2>
         <p>Menilai konsistensi tes menggunakan koefisien KR-20.</p>

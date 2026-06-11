@@ -82,11 +82,16 @@ document.addEventListener("DOMContentLoaded", () => {
   els.exportExcelBtn.addEventListener("click", exportExcelReport);
   els.exportPdfBtn.addEventListener("click", exportPdfReport);
   document.querySelectorAll("[data-target]").forEach((button) => {
-    button.addEventListener("click", () => scrollToSection(button.dataset.target));
+    button.addEventListener("click", () => {
+      if (scrollToSection(button.dataset.target)) {
+        setActiveNav(button.dataset.target);
+      }
+    });
   });
   document.querySelectorAll("[data-sample]").forEach((button) => {
     button.addEventListener("click", () => fillDataSample(button.dataset.sample));
   });
+  setupSectionObserver();
 });
 
 function downloadTemplate() {
@@ -165,6 +170,9 @@ function handleTextData() {
 function fillDataSample(sampleKey) {
   const sample = DATA_SAMPLES[sampleKey] || DATA_SAMPLES.medium;
   els.dataTextInput.value = sample.trim();
+  document.querySelectorAll("[data-sample]").forEach((button) => {
+    button.classList.toggle("active", button.dataset.sample === sampleKey);
+  });
   showMessage("Contoh data sudah dimasukkan. Klik Gunakan Data untuk membaca data.", "success");
 }
 
@@ -584,11 +592,37 @@ function addPdfTable(doc, title, rows, startY = null) {
 function scrollToSection(id) {
   const resultIds = ["summarySection", "difficultySection", "discriminationSection", "validitySection", "reliabilitySection"];
   if (resultIds.includes(id) && !state.results) {
-    showMessage("Upload matriks dan klik Hitung Analisis terlebih dahulu.", "error");
+    showMessage("Masukkan data matriks dan klik Hitung Analisis terlebih dahulu.", "error");
     document.getElementById("inputSection")?.scrollIntoView({ behavior: "smooth", block: "start" });
-    return;
+    setActiveNav("inputSection");
+    return false;
   }
   document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  return true;
+}
+
+function setActiveNav(id) {
+  document.querySelectorAll(".nav-btn").forEach((button) => {
+    button.classList.toggle("active", button.dataset.target === id);
+  });
+}
+
+function setupSectionObserver() {
+  if (!("IntersectionObserver" in window)) {
+    setActiveNav("inputSection");
+    return;
+  }
+  const sections = ["inputSection", "summarySection", "difficultySection", "discriminationSection", "validitySection", "reliabilitySection"]
+    .map((id) => document.getElementById(id))
+    .filter(Boolean);
+  const observer = new IntersectionObserver((entries) => {
+    const visible = entries
+      .filter((entry) => entry.isIntersecting)
+      .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+    if (visible) setActiveNav(visible.target.id);
+  }, { rootMargin: "-20% 0px -65% 0px", threshold: [0.1, 0.35, 0.6] });
+  sections.forEach((section) => observer.observe(section));
+  setActiveNav("inputSection");
 }
 
 function setResultSections(enabled) {
