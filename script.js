@@ -23,6 +23,10 @@ const els = {
   reliabilityCards: document.getElementById("reliabilityCards"),
   reliabilityTable: document.getElementById("reliabilityTable"),
   groupInfo: document.getElementById("groupInfo"),
+  difficultyInsight: document.getElementById("difficultyInsight"),
+  discriminationInsight: document.getElementById("discriminationInsight"),
+  validityInsight: document.getElementById("validityInsight"),
+  reliabilityInsight: document.getElementById("reliabilityInsight"),
   exportExcelBtn: document.getElementById("exportExcelBtn"),
   exportPdfBtn: document.getElementById("exportPdfBtn")
 };
@@ -34,7 +38,7 @@ document.addEventListener("DOMContentLoaded", () => {
   els.analyzeBtn.addEventListener("click", runAnalysis);
   els.exportExcelBtn.addEventListener("click", exportExcelReport);
   els.exportPdfBtn.addEventListener("click", exportPdfReport);
-  document.querySelectorAll(".nav-btn").forEach((button) => {
+  document.querySelectorAll("[data-target]").forEach((button) => {
     button.addEventListener("click", () => scrollToSection(button.dataset.target));
   });
 });
@@ -225,6 +229,8 @@ function analyzeMatrix(data) {
       sumXY: sums.sumXY,
       sumX2: sums.sumX2,
       sumY2: sums.sumY2,
+      numerator: (sums.n * sums.sumXY) - (sums.sumX * sums.sumY),
+      denominator: Math.sqrt(((sums.n * sums.sumX2) - (sums.sumX ** 2)) * ((sums.n * sums.sumY2) - (sums.sumY ** 2))),
       r,
       category: category.category,
       status: category.status
@@ -326,6 +332,7 @@ function renderResults(results) {
       item.category
     ])
   );
+  els.difficultyInsight.innerHTML = buildDifficultyInsight(results.difficulty);
 
   els.groupInfo.innerHTML = `Kelompok atas dan bawah masing-masing berjumlah <strong>${results.meta.groupSize}</strong> responden.`;
   els.discriminationTable.innerHTML = tableHtml(
@@ -341,9 +348,10 @@ function renderResults(results) {
       item.category
     ])
   );
+  els.discriminationInsight.innerHTML = buildDiscriminationInsight(results.discrimination);
 
   els.validityTable.innerHTML = tableHtml(
-    ["No Soal", "Sigma X", "Sigma Y", "Sigma XY", "Sigma X2", "Sigma Y2", "r hitung", "Keputusan"],
+    ["No Soal", "Sigma X", "Sigma Y", "Sigma XY", "Sigma X2", "Sigma Y2", "Pembilang", "Penyebut", "r hitung", "Keputusan"],
     results.validity.map((item) => [
       `S${item.item}`,
       item.sumX,
@@ -351,12 +359,15 @@ function renderResults(results) {
       item.sumXY,
       item.sumX2,
       item.sumY2,
+      round(item.numerator, 3),
+      round(item.denominator, 3),
       round(item.r, 3),
       results.meta.validityThreshold !== null
         ? `${item.status} (r tabel ${results.meta.validityThreshold})`
         : `${item.category} / ${item.status}`
     ])
   );
+  els.validityInsight.innerHTML = buildValidityInsight(results.validity, results.meta.validityThreshold);
 
   els.reliabilityCards.innerHTML = [
     metricCard("Jumlah Soal (k)", results.reliability.k),
@@ -374,6 +385,58 @@ function renderResults(results) {
       round(item.pq, 3)
     ]).concat([["Rumus KR-20", "", "", results.reliability.formula]])
   );
+  els.reliabilityInsight.innerHTML = buildReliabilityInsight(results.reliability);
+}
+
+function buildDifficultyInsight(items) {
+  const counts = countBy(items.map((item) => item.category));
+  return `
+    <h3>Hasil kesukaran</h3>
+    <p>Total butir: <strong>${items.length}</strong></p>
+    <ul>
+      <li>Sukar: ${counts.Sukar || 0}</li>
+      <li>Sedang: ${counts.Sedang || 0}</li>
+      <li>Mudah: ${counts.Mudah || 0}</li>
+    </ul>
+  `;
+}
+
+function buildDiscriminationInsight(items) {
+  const counts = countBy(items.map((item) => item.category));
+  return `
+    <h3>Hasil daya pembeda</h3>
+    <p>Butir dengan daya pembeda baik perlu dipertahankan, sedangkan kategori jelek atau buruk perlu diperiksa lagi.</p>
+    <ul>
+      <li>Sangat Baik: ${counts["Sangat Baik"] || 0}</li>
+      <li>Baik: ${counts.Baik || 0}</li>
+      <li>Cukup: ${counts.Cukup || 0}</li>
+      <li>Jelek/Buruk: ${(counts.Jelek || 0) + (counts.Buruk || 0)}</li>
+    </ul>
+  `;
+}
+
+function buildValidityInsight(items, threshold) {
+  const valid = items.filter((item) => item.status === "Valid").length;
+  const notValid = items.filter((item) => item.status === "Tidak Valid").length;
+  const enough = items.length - valid - notValid;
+  const rule = threshold !== null ? `Keputusan memakai r tabel ${threshold}.` : "Keputusan memakai kategori korelasi otomatis.";
+  return `
+    <h3>Hasil validitas</h3>
+    <p>${rule}</p>
+    <ul>
+      <li>Valid: ${valid}</li>
+      <li>Cukup: ${enough}</li>
+      <li>Tidak valid: ${notValid}</li>
+    </ul>
+  `;
+}
+
+function buildReliabilityInsight(reliability) {
+  return `
+    <h3>Hasil reliabilitas</h3>
+    <p>Koefisien KR-20 tes adalah <strong>${reliability.kr20}</strong> dengan kategori <strong>${escapeHtml(reliability.category)}</strong>.</p>
+    <p>Perhitungan: ${escapeHtml(reliability.formula)}</p>
+  `;
 }
 
 function exportExcelReport() {
@@ -538,6 +601,13 @@ function parseOptionalThreshold(value) {
   const number = Number(value);
   if (!Number.isFinite(number) || number <= 0) return null;
   return Math.min(1, Math.max(0, round(number, 3)));
+}
+
+function countBy(values) {
+  return values.reduce((acc, value) => {
+    acc[value] = (acc[value] || 0) + 1;
+    return acc;
+  }, {});
 }
 
 function metricCard(label, value) {

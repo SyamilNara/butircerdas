@@ -6,7 +6,6 @@
   <title>ButirCerdas - Analisis Butir Soal</title>
   <link rel="stylesheet" href="style.css" />
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
 </head>
@@ -32,24 +31,52 @@
   <main id="top">
     <section class="hero">
       <div class="hero-copy">
-        <p class="eyebrow">Input matriks 1/0 &bull; Tanpa login &bull; Tanpa database</p>
-        <h1>Analisis butir soal dari matriks skor benar-salah.</h1>
-        <p class="lead">ButirCerdas menghitung tingkat kesukaran, daya pembeda, validitas, dan reliabilitas dari data 1 dan 0. Nilai 1 berarti benar, nilai 0 berarti salah.</p>
+        <p class="eyebrow">Perangkat tes dikotomi</p>
+        <h1>Evaluasi instrumen tes dari matriks 1/0.</h1>
+        <p class="lead">Upload Excel atau CSV berisi skor benar-salah. ButirCerdas menghitung tingkat kesukaran, daya pembeda, validitas butir, dan reliabilitas KR-20 langsung di browser tanpa login dan tanpa database.</p>
+        <div class="hero-actions">
+          <button class="primary-btn" type="button" data-target="inputSection">Mulai Analisis</button>
+          <button class="secondary-btn" type="button" data-target="toolOverview">Lihat Alat</button>
+        </div>
       </div>
-      <div class="hero-stats" aria-label="Analisis utama">
-        <div><strong>1/0</strong><span>Matriks skor</span></div>
-        <div><strong>4</strong><span>Analisis utama</span></div>
-        <div><strong>KR-20</strong><span>Reliabilitas tes</span></div>
-      </div>
+      <aside class="hero-panel" aria-label="Format data">
+        <span class="panel-label">Format utama</span>
+        <strong>Nama, S1, S2, S3...</strong>
+        <p>Nilai setiap sel soal hanya 1 atau 0. Nama kosong otomatis menjadi Responden A, B, C, dan seterusnya.</p>
+      </aside>
+    </section>
+
+    <section id="toolOverview" class="tool-overview" aria-label="Daftar alat analisis">
+      <article class="tool-card">
+        <span>01</span>
+        <h2>Tingkat Kesukaran</h2>
+        <p>Mengukur proporsi responden yang menjawab benar untuk menentukan butir sukar, sedang, atau mudah.</p>
+      </article>
+      <article class="tool-card">
+        <span>02</span>
+        <h2>Daya Pembeda</h2>
+        <p>Membandingkan kelompok atas dan bawah 27% untuk melihat kemampuan soal membedakan peserta.</p>
+      </article>
+      <article class="tool-card">
+        <span>03</span>
+        <h2>Validitas Butir</h2>
+        <p>Menghitung korelasi Pearson antara skor butir dan skor total terkoreksi.</p>
+      </article>
+      <article class="tool-card">
+        <span>04</span>
+        <h2>Reliabilitas</h2>
+        <p>Mengukur konsistensi internal tes menggunakan rumus KR-20.</p>
+      </article>
     </section>
 
     <section id="inputSection" class="content-section">
       <div class="section-title">
-        <span>Input Data</span>
-        <h2>Gunakan format matriks skor 1/0</h2>
+        <span>Alat Kerja / Input</span>
+        <h2>Pusat kendali data</h2>
+        <p>Gunakan template atau unggah file milikmu. Setelah file terbaca, klik Hitung Analisis agar semua modul hasil aktif.</p>
       </div>
 
-      <div class="workspace-grid">
+      <div class="tool-layout">
         <section class="panel">
           <div class="section-heading">
             <div>
@@ -73,56 +100,44 @@
             <label>
               R tabel validitas
               <input id="validityThreshold" type="number" min="0" max="1" step="0.01" placeholder="Opsional, misal 0.36" />
-              <small class="field-hint">Kosongkan untuk kategori korelasi otomatis. Isi jika ingin membandingkan r hitung dengan r tabel.</small>
+              <small class="field-hint">Kosongkan untuk kategori otomatis. Isi jika mau keputusan valid memakai r hitung dibanding r tabel.</small>
             </label>
           </div>
-          <button id="downloadTemplateBtn" class="primary-btn" type="button">Download Template Excel</button>
+          <button id="downloadTemplateBtn" class="primary-btn full-btn" type="button">Download Template Excel</button>
         </section>
 
         <section class="panel">
           <div class="section-heading">
             <div>
               <p class="section-kicker">Upload</p>
-              <h3>Masukkan Excel atau CSV</h3>
+              <h3>Unggah dokumen matriks</h3>
             </div>
           </div>
           <label class="dropzone" for="matrixFile">
-            <span>Pilih file matriks 1/0</span>
-            <small>Format kolom: Nama, S1, S2, S3, dan seterusnya</small>
+            <span>Klik untuk cari file</span>
+            <small>Excel atau CSV dengan header Nama, S1, S2, S3...</small>
             <input id="matrixFile" type="file" accept=".xlsx,.xls,.csv" />
           </label>
           <div id="messageBox" class="message-box" role="status" aria-live="polite"></div>
         </section>
       </div>
 
-      <div class="guide-grid howto-grid">
+      <div class="guide-grid">
         <article>
-          <h3>Format data</h3>
-          <p>Baris pertama adalah header. Kolom pertama boleh berisi nama responden.</p>
-          <ul>
-            <li>Contoh: Nama, S1, S2, S3, S4</li>
-            <li>Isi soal hanya boleh 1 atau 0</li>
-            <li>Nama kosong otomatis menjadi Responden A, B, C, dan seterusnya</li>
-          </ul>
+          <h3>Format kolom</h3>
+          <p>Header soal harus S1, S2, S3, dan seterusnya.</p>
         </article>
         <article>
-          <h3>Arti nilai</h3>
-          <p>Data yang dianalisis adalah skor benar dan salah.</p>
-          <ul>
-            <li>1 = jawaban benar</li>
-            <li>0 = jawaban salah</li>
-            <li>Tidak menggunakan pilihan A/B/C/D</li>
-          </ul>
+          <h3>Format nilai</h3>
+          <p>Isi data soal hanya 1 untuk benar dan 0 untuk salah.</p>
         </article>
         <article>
-          <h3>Analisis yang dihitung</h3>
-          <p>Setiap bagian memiliki tabel perhitungan sendiri.</p>
-          <ul>
-            <li>Tingkat kesukaran</li>
-            <li>Daya pembeda</li>
-            <li>Validitas butir</li>
-            <li>Reliabilitas KR-20</li>
-          </ul>
+          <h3>Nama kosong</h3>
+          <p>Nama yang kosong otomatis diganti Responden A, B, C.</p>
+        </article>
+        <article>
+          <h3>Privasi</h3>
+          <p>File diproses di browser dan tidak disimpan ke server.</p>
         </article>
       </div>
     </section>
@@ -130,13 +145,13 @@
     <section id="previewSection" class="content-section hidden">
       <div class="section-title inline-title">
         <div>
-          <span>Preview</span>
-          <h2>Matriks data terdeteksi</h2>
+          <span>Preview Data</span>
+          <h2>Matriks terdeteksi</h2>
+          <p>Periksa jumlah responden dan jumlah soal. Tabel bisa digeser ke samping jika kolom soal banyak.</p>
         </div>
         <button id="analyzeBtn" class="primary-btn" type="button">Hitung Analisis</button>
       </div>
       <div id="detectedSummary" class="metric-grid"></div>
-      <p class="table-note">Geser tabel ke samping jika jumlah soal banyak.</p>
       <div class="table-wrap">
         <table id="previewTable"></table>
       </div>
@@ -145,8 +160,9 @@
     <section id="summarySection" class="content-section result-section hidden">
       <div class="section-title inline-title">
         <div>
-          <span>Ringkasan</span>
-          <h2>Hasil umum tes</h2>
+          <span>Hasil Umum</span>
+          <h2>Ringkasan analisis</h2>
+          <p>Bagian ini menampilkan performa peserta dan status awal perangkat tes.</p>
         </div>
         <div class="button-row">
           <button id="exportExcelBtn" class="secondary-btn" type="button">Export Excel</button>
@@ -154,6 +170,7 @@
         </div>
       </div>
       <div id="summaryCards" class="metric-grid"></div>
+      <h3 class="table-heading">Tabel skor responden</h3>
       <div class="table-wrap">
         <table id="scoreTable"></table>
       </div>
@@ -161,13 +178,24 @@
 
     <section id="difficultySection" class="content-section result-section hidden">
       <div class="section-title">
-        <span>Analisis 1</span>
-        <h2>Tingkat kesukaran</h2>
+        <span>Alat Kerja / 01</span>
+        <h2>Analisis tingkat kesukaran soal</h2>
+        <p>Indeks kesukaran menunjukkan seberapa besar proporsi responden yang menjawab benar pada tiap butir.</p>
       </div>
-      <div class="explain-box">
-        <p><strong>Tujuan:</strong> mengetahui mudah atau sukarnya tiap soal.</p>
-        <p><strong>Rumus:</strong> P = B / N, dengan B = jumlah responden benar dan N = jumlah seluruh responden.</p>
+      <div class="analysis-grid">
+        <div class="explain-box">
+          <h3>Cara kerja</h3>
+          <p><strong>Rumus:</strong> P = B / N</p>
+          <p>B adalah jumlah responden benar. N adalah jumlah seluruh responden. Jika P makin besar, soal makin mudah.</p>
+          <ul>
+            <li>P &lt;= 0.30 = Sukar</li>
+            <li>0.31 sampai 0.70 = Sedang</li>
+            <li>P &gt; 0.70 = Mudah</li>
+          </ul>
+        </div>
+        <div class="result-callout" id="difficultyInsight"></div>
       </div>
+      <h3 class="table-heading">Tabel perhitungan kesukaran</h3>
       <div class="table-wrap">
         <table id="difficultyTable"></table>
       </div>
@@ -175,14 +203,20 @@
 
     <section id="discriminationSection" class="content-section result-section hidden">
       <div class="section-title">
-        <span>Analisis 2</span>
-        <h2>Daya pembeda</h2>
+        <span>Alat Kerja / 02</span>
+        <h2>Analisis daya pembeda</h2>
+        <p>Daya pembeda menunjukkan kemampuan soal membedakan responden kelompok atas dan kelompok bawah.</p>
       </div>
-      <div class="explain-box">
-        <p><strong>Tujuan:</strong> melihat kemampuan soal membedakan kelompok skor tinggi dan kelompok skor rendah.</p>
-        <p><strong>Rumus:</strong> D = (BA / JA) - (BB / JB), dengan BA = benar kelompok atas, BB = benar kelompok bawah, JA/JB = jumlah anggota kelompok.</p>
-        <p id="groupInfo"></p>
+      <div class="analysis-grid">
+        <div class="explain-box">
+          <h3>Cara kerja</h3>
+          <p><strong>Rumus:</strong> D = (BA / JA) - (BB / JB)</p>
+          <p>BA dan BB adalah jumlah benar pada kelompok atas dan bawah. JA dan JB adalah jumlah anggota masing-masing kelompok.</p>
+          <p id="groupInfo"></p>
+        </div>
+        <div class="result-callout" id="discriminationInsight"></div>
       </div>
+      <h3 class="table-heading">Tabel perhitungan daya pembeda</h3>
       <div class="table-wrap">
         <table id="discriminationTable"></table>
       </div>
@@ -190,14 +224,20 @@
 
     <section id="validitySection" class="content-section result-section hidden">
       <div class="section-title">
-        <span>Analisis 3</span>
-        <h2>Validitas butir</h2>
+        <span>Alat Kerja / 03</span>
+        <h2>Analisis validitas butir soal</h2>
+        <p>Validitas butir dihitung dari hubungan skor butir dengan skor total terkoreksi.</p>
       </div>
-      <div class="explain-box">
-        <p><strong>Tujuan:</strong> mengetahui hubungan skor tiap butir dengan skor total tes.</p>
-        <p><strong>Rumus:</strong> korelasi Pearson antara skor butir X dan skor total terkoreksi Y, yaitu total skor dikurangi skor butir tersebut.</p>
-        <p><strong>Catatan:</strong> jika R tabel diisi, status valid ditentukan dari r hitung &ge; R tabel.</p>
+      <div class="analysis-grid">
+        <div class="explain-box">
+          <h3>Cara kerja</h3>
+          <p><strong>Rumus:</strong> Pearson r antara X dan Y.</p>
+          <p>X adalah skor butir. Y adalah skor total responden dikurangi skor butir yang sedang dihitung.</p>
+          <p>Jika R tabel diisi, keputusan valid memakai r hitung &gt;= R tabel.</p>
+        </div>
+        <div class="result-callout" id="validityInsight"></div>
       </div>
+      <h3 class="table-heading">Tabel perhitungan validitas</h3>
       <div class="table-wrap">
         <table id="validityTable"></table>
       </div>
@@ -205,14 +245,20 @@
 
     <section id="reliabilitySection" class="content-section result-section hidden">
       <div class="section-title">
-        <span>Analisis 4</span>
-        <h2>Reliabilitas tes</h2>
+        <span>Alat Kerja / 04</span>
+        <h2>Analisis reliabilitas perangkat tes</h2>
+        <p>Reliabilitas KR-20 menunjukkan konsistensi internal seluruh butir dalam satu tes.</p>
       </div>
       <div id="reliabilityCards" class="metric-grid"></div>
-      <div class="explain-box">
-        <p><strong>Tujuan:</strong> mengetahui konsistensi keseluruhan tes.</p>
-        <p><strong>Rumus:</strong> KR-20 = k/(k-1) &times; (1 - &Sigma;pq / Var total), dengan k = jumlah soal, p = proporsi benar, q = 1-p.</p>
+      <div class="analysis-grid">
+        <div class="explain-box">
+          <h3>Cara kerja</h3>
+          <p><strong>Rumus:</strong> KR-20 = k/(k-1) x (1 - Sigma pq / Var total)</p>
+          <p>k adalah jumlah soal. p adalah proporsi benar. q adalah proporsi salah. Var total adalah varians skor total responden.</p>
+        </div>
+        <div class="result-callout" id="reliabilityInsight"></div>
       </div>
+      <h3 class="table-heading">Tabel parameter p, q, dan pq</h3>
       <div class="table-wrap">
         <table id="reliabilityTable"></table>
       </div>
@@ -220,7 +266,7 @@
   </main>
 
   <footer class="app-footer">
-    <p>ButirCerdas &copy; 2026 &bull; Data diproses di browser tanpa login dan tanpa penyimpanan permanen.</p>
+    <p>ButirCerdas &copy; 2026. Data diproses di browser tanpa login, tanpa database, dan tanpa penyimpanan permanen.</p>
   </footer>
 
   <script src="script.js"></script>

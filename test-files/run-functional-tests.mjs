@@ -159,8 +159,8 @@ function createBrowserLikeContext() {
     "examName", "subjectName", "questionCount", "validityThreshold", "downloadTemplateBtn",
     "matrixFile", "messageBox", "previewSection", "detectedSummary", "previewTable",
     "analyzeBtn", "summaryCards", "scoreTable", "difficultyTable", "discriminationTable",
-    "validityTable", "reliabilityCards", "reliabilityTable", "groupInfo", "exportExcelBtn",
-    "exportPdfBtn"
+    "validityTable", "reliabilityCards", "reliabilityTable", "groupInfo", "difficultyInsight",
+    "discriminationInsight", "validityInsight", "reliabilityInsight", "exportExcelBtn", "exportPdfBtn"
   ];
   ids.forEach((id) => { elements[id] = makeElement(id); });
   elements.examName.value = "Ujian Contoh";
@@ -184,6 +184,7 @@ function createBrowserLikeContext() {
     },
     querySelectorAll(selector) {
       if (selector === ".nav-btn") return resultNav;
+      if (selector === "[data-target]") return resultNav;
       if (selector === ".result-nav") return resultNav;
       if (selector === ".result-section") return resultSections;
       return [];
