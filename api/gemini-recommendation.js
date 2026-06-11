@@ -5,7 +5,7 @@ module.exports = async function handler(req, res) {
   }
 
   const apiKey = process.env.GEMINI_API_KEY;
-  const model = process.env.GEMINI_MODEL || "gemini-2.0-flash";
+  const model = process.env.GEMINI_MODEL || "gemini-2.5-flash";
   if (!apiKey) {
     res.status(503).json({ error: "GEMINI_API_KEY belum diatur di environment variable Vercel." });
     return;
@@ -14,40 +14,84 @@ module.exports = async function handler(req, res) {
   try {
     const payload = normalizePayload(typeof req.body === "string" ? JSON.parse(req.body || "{}") : req.body || {});
     const prompt = [
-      "Buat rekomendasi singkat dalam bahasa Indonesia untuk hasil analisis butir soal berikut.",
+      "Buat narasi rekomendasi lengkap dalam bahasa Indonesia untuk hasil analisis butir soal berikut.",
       "Jangan hitung ulang rumus. Gunakan hasil statistik yang diberikan.",
-      "Tuliskan ringkasan kualitas tes, masalah utama, dan saran perbaikan praktis.",
+      "Jangan berhenti di tengah kalimat.",
+      "Gunakan format berikut:",
+      "1. Ringkasan kualitas tes",
+      "2. Masalah utama",
+      "3. Saran perbaikan",
+      "4. Prioritas tindak lanjut",
+      "Tulis 180 sampai 260 kata. Gunakan bahasa yang jelas untuk guru.",
       JSON.stringify(payload, null, 2)
     ].join("\n\n");
 
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
+    const data = await callGeminiWithRetry({
+      apiKey,
+      model,
+      body: {
         contents: [
           {
             parts: [{ text: prompt }]
           }
         ],
         generationConfig: {
-          temperature: 0.4,
-          maxOutputTokens: 700
+          temperature: 0.25,
+          maxOutputTokens: 1800
         }
-      })
+      }
     });
 
-    const data = await response.json();
-    if (!response.ok) {
-      res.status(response.status).json({ error: data.error?.message || "Gemini API gagal dipanggil." });
+    const recommendation = data.candidates?.[0]?.content?.parts?.map((part) => part.text).join("\n").trim();
+    const finishReason = data.candidates?.[0]?.finishReason;
+    if (finishReason === "MAX_TOKENS") {
+      res.status(502).json({ error: "Respons Gemini terpotong karena batas output. Coba ulangi rekomendasi AI." });
       return;
     }
-
-    const recommendation = data.candidates?.[0]?.content?.parts?.map((part) => part.text).join("\n").trim();
     res.status(200).json({ recommendation: recommendation || "Rekomendasi AI belum menghasilkan teks." });
   } catch (error) {
     res.status(500).json({ error: error.message || "Terjadi kesalahan pada serverless function." });
   }
 };
+
+async function callGeminiWithRetry({ apiKey, model, body }) {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+  const retryableStatuses = new Set([429, 500, 502, 503, 504]);
+  let lastError;
+
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 25000);
+      const response = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        signal: controller.signal,
+        body: JSON.stringify(body)
+      });
+      clearTimeout(timeout);
+
+      const text = await response.text();
+      const data = text ? JSON.parse(text) : {};
+
+      if (response.ok) return data;
+      const message = data.error?.message || "Gemini API gagal dipanggil.";
+      lastError = new Error(message);
+      if (!retryableStatuses.has(response.status)) throw lastError;
+    } catch (error) {
+      lastError = error;
+      if (attempt === 2) break;
+    }
+
+    await delay(700 * (attempt + 1));
+  }
+
+  throw lastError || new Error("Gemini API gagal dipanggil.");
+}
+
+function delay(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 function normalizePayload(payload) {
   return {
