@@ -33,7 +33,7 @@
       <div class="hero-copy">
         <p class="eyebrow">Analisis butir soal</p>
         <h1>ButirCerdas</h1>
-        <p class="lead">Alat bantu untuk menghitung kualitas soal dari matriks benar-salah. Masukkan data Excel, CSV, atau teks manual, lalu dapatkan kesukaran, daya pembeda, validitas butir, dan reliabilitas KR-20.</p>
+        <p class="lead">Alat bantu untuk menghitung kualitas soal dari matriks benar-salah. Masukkan data Excel, CSV, atau teks yang dipaste, lalu dapatkan kesukaran, daya pembeda, validitas butir, dan reliabilitas KR-20.</p>
         <div class="hero-actions">
           <button class="primary-btn" type="button" data-target="inputSection">Mulai Analisis</button>
           <button class="secondary-btn" type="button" data-target="toolOverview">Lihat Alat</button>
@@ -73,7 +73,7 @@
       <div class="section-title">
         <span>Input Data</span>
         <h2>Siapkan data analisis</h2>
-        <p>Buat template kosong, unggah file, atau paste data manual. Setelah data terbaca, lanjutkan dengan tombol Hitung Analisis.</p>
+        <p>Buat template kosong, unggah file, atau paste data. Setelah data terbaca, lanjutkan dengan tombol Hitung Analisis.</p>
       </div>
 
       <div class="tool-layout">
@@ -118,17 +118,17 @@
             <small>Excel atau CSV dengan header Nama, S1, S2, S3...</small>
             <input id="matrixFile" type="file" accept=".xlsx,.xls,.csv" />
           </label>
-          <div class="manual-entry">
+          <div class="text-entry">
             <label>
-              Paste data manual
-              <textarea id="manualMatrixInput" rows="9" spellcheck="false" placeholder="Nama,S1,S2,S3,S4&#10;Raka,1,1,0,1&#10;Salsa,1,0,0,1"></textarea>
+              Paste data
+              <textarea id="dataTextInput" rows="9" spellcheck="false" placeholder="Nama,S1,S2,S3,S4&#10;Raka,1,1,0,1&#10;Salsa,1,0,0,1"></textarea>
             </label>
-            <div class="sample-row" aria-label="Contoh data manual">
+            <div class="sample-row" aria-label="Contoh data">
               <button class="sample-btn" type="button" data-sample="mini">Contoh 5 Soal</button>
               <button class="sample-btn" type="button" data-sample="medium">Contoh 10 Soal</button>
               <button class="sample-btn" type="button" data-sample="blankNames">Contoh Nama Kosong</button>
             </div>
-            <button id="useManualDataBtn" class="secondary-btn full-btn" type="button">Gunakan Data Manual</button>
+            <button id="useDataBtn" class="secondary-btn full-btn" type="button">Gunakan Data</button>
           </div>
           <div id="messageBox" class="message-box" role="status" aria-live="polite"></div>
         </section>
@@ -265,12 +265,12 @@
       <div class="analysis-grid">
         <div class="explain-box">
           <h3>Cara kerja</h3>
-          <p><strong>Rumus:</strong> KR-20 = k/(k-1) x (1 - Sigma pq / Var total)</p>
+          <p><strong>Rumus:</strong> KR-20 = k/(k-1) × (1 - Σpq / Var total)</p>
           <p>k adalah jumlah soal. p adalah proporsi benar. q adalah proporsi salah. Var total adalah varians skor total responden.</p>
         </div>
         <div class="result-callout" id="reliabilityInsight"></div>
       </div>
-      <h3 class="table-heading">Tabel parameter p, q, dan pq</h3>
+      <h3 class="table-heading">Tabel parameter p, q, dan p × q</h3>
       <div class="table-wrap">
         <table id="reliabilityTable"></table>
       </div>

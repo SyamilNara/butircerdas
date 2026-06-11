@@ -422,7 +422,7 @@ textarea:focus {
   display: none;
 }
 
-.manual-entry {
+.text-entry {
   display: grid;
   gap: 10px;
   margin-top: 14px;

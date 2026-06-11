@@ -28,7 +28,7 @@ const checks = [];
 testTemplateDownload();
 const result10 = testWorkbook(files.valid10, 15, 10, "10 soal");
 const result20 = testWorkbook(files.valid20, 30, 20, "20 soal");
-testManualInput();
+testTextInput();
 testInvalidWorkbook();
 testRender(result10.results);
 testExports(result10.results);
@@ -94,19 +94,19 @@ function testInvalidWorkbook() {
   checks.push({ check: "Validasi file salah format", message });
 }
 
-function testManualInput() {
-  context.fillManualSample("medium");
-  assert(context.__elements.manualMatrixInput.value.includes("Nama,S1,S2"), "Contoh manual mengisi textarea");
-  context.handleManualMatrix();
+function testTextInput() {
+  context.fillDataSample("medium");
+  assert(context.__elements.dataTextInput.value.includes("Nama,S1,S2"), "Contoh data mengisi textarea");
+  context.handleTextData();
   const parsed = context.__state.matrixData;
-  assert(parsed.respondents.length === 15, "Input manual contoh 10 soal membaca 15 responden");
-  assert(parsed.itemNumbers.length === 10, "Input manual contoh 10 soal membaca 10 butir");
-  assert(context.__elements.previewTable.innerHTML.includes("<th>S10</th>"), "Preview manual menampilkan soal terakhir");
+  assert(parsed.respondents.length === 15, "Input data contoh 10 soal membaca 15 responden");
+  assert(parsed.itemNumbers.length === 10, "Input data contoh 10 soal membaca 10 butir");
+  assert(context.__elements.previewTable.innerHTML.includes("<th>S10</th>"), "Preview data menampilkan soal terakhir");
 
-  context.fillManualSample("blankNames");
-  const blankParsed = context.parseManualMatrix(context.__elements.manualMatrixInput.value);
-  assert(blankParsed.respondents[0].name === "Responden A", "Input manual nama kosong menjadi Responden A");
-  checks.push({ check: "Input teks manual dan contoh data berjalan" });
+  context.fillDataSample("blankNames");
+  const blankParsed = context.parseTextMatrix(context.__elements.dataTextInput.value);
+  assert(blankParsed.respondents[0].name === "Responden A", "Input data nama kosong menjadi Responden A");
+  checks.push({ check: "Input teks dan contoh data berjalan" });
 }
 
 function testRender(results) {
@@ -117,7 +117,7 @@ function testRender(results) {
   assert(context.__elements.summaryCards.innerHTML.includes("Reliabilitas KR-20"), "Ringkasan menampilkan reliabilitas");
   assert(context.__elements.difficultyTable.innerHTML.includes("Perhitungan P = B/N"), "Tabel kesukaran punya perhitungan");
   assert(context.__elements.discriminationTable.innerHTML.includes("Perhitungan D"), "Tabel daya pembeda punya perhitungan");
-  assert(context.__elements.validityTable.innerHTML.includes("Sigma XY"), "Tabel validitas punya komponen hitung");
+  assert(context.__elements.validityTable.innerHTML.includes("ΣXY"), "Tabel validitas punya komponen hitung");
   assert(context.__elements.reliabilityTable.innerHTML.includes("Rumus KR-20"), "Tabel reliabilitas punya rumus");
   checks.push({ check: "Render semua tabel analisis terpisah" });
 }
@@ -150,8 +150,8 @@ function testExports(results) {
   assert(pdfCapture.saved === "laporan-butircerdas.pdf", "Export PDF memakai nama benar");
   assert(pdfCapture.tables.some((table) => table.includes("Perhitungan P")), "PDF berisi kesukaran");
   assert(pdfCapture.tables.some((table) => table.includes("Perhitungan D")), "PDF berisi daya pembeda");
-  assert(pdfCapture.tables.some((table) => table.includes("Sigma XY")), "PDF berisi validitas");
-  assert(pdfCapture.tables.some((table) => table.includes("pq")), "PDF berisi reliabilitas");
+  assert(pdfCapture.tables.some((table) => table.includes("ΣXY")), "PDF berisi validitas");
+  assert(pdfCapture.tables.some((table) => table.includes("p × q")), "PDF berisi reliabilitas");
   checks.push({ check: "Export Excel/PDF analisis terpisah" });
 }
 
@@ -173,7 +173,7 @@ function createBrowserLikeContext() {
   const elements = {};
   const ids = [
     "examName", "subjectName", "questionCount", "validityThreshold", "downloadTemplateBtn",
-    "matrixFile", "manualMatrixInput", "useManualDataBtn", "messageBox", "previewSection", "detectedSummary", "previewTable",
+    "matrixFile", "dataTextInput", "useDataBtn", "messageBox", "previewSection", "detectedSummary", "previewTable",
     "analyzeBtn", "summaryCards", "scoreTable", "difficultyTable", "discriminationTable",
     "validityTable", "reliabilityCards", "reliabilityTable", "groupInfo", "difficultyInsight",
     "discriminationInsight", "validityInsight", "reliabilityInsight", "exportExcelBtn", "exportPdfBtn"
