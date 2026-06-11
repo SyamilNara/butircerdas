@@ -234,7 +234,7 @@ function parseMatrixWorkbook(workbook) {
 
 function runAnalysis() {
   if (!state.matrixData) {
-    showMessage("Upload file matriks 1/0 terlebih dahulu.", "error");
+    showMessage("Masukkan data matriks 1/0 terlebih dahulu.", "error");
     return;
   }
   const results = analyzeMatrix(state.matrixData);

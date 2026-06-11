@@ -15,7 +15,7 @@
       <span class="brand-mark">B</span>
       <span>
         <strong>ButirCerdas</strong>
-        <small>Analisis Matriks 1/0</small>
+        <small>Analisis Butir Soal</small>
       </span>
     </a>
     <nav class="page-nav" aria-label="Navigasi halaman">
@@ -31,18 +31,18 @@
   <main id="top">
     <section class="hero">
       <div class="hero-copy">
-        <p class="eyebrow">Perangkat tes dikotomi</p>
-        <h1>Evaluasi instrumen tes dari matriks 1/0.</h1>
-        <p class="lead">Upload Excel/CSV atau paste data manual berisi skor benar-salah. ButirCerdas menghitung tingkat kesukaran, daya pembeda, validitas butir, dan reliabilitas KR-20 langsung di browser tanpa login dan tanpa database.</p>
+        <p class="eyebrow">Analisis butir soal</p>
+        <h1>ButirCerdas</h1>
+        <p class="lead">Alat bantu untuk menghitung kualitas soal dari matriks benar-salah. Masukkan data Excel, CSV, atau teks manual, lalu dapatkan kesukaran, daya pembeda, validitas butir, dan reliabilitas KR-20.</p>
         <div class="hero-actions">
           <button class="primary-btn" type="button" data-target="inputSection">Mulai Analisis</button>
           <button class="secondary-btn" type="button" data-target="toolOverview">Lihat Alat</button>
         </div>
       </div>
       <aside class="hero-panel" aria-label="Format data">
-        <span class="panel-label">Format utama</span>
-        <strong>Nama, S1, S2, S3...</strong>
-        <p>Nilai setiap sel soal hanya 1 atau 0. Nama kosong otomatis menjadi Responden A, B, C, dan seterusnya.</p>
+        <span class="panel-label">Format data</span>
+        <strong>Matriks 1/0</strong>
+        <p>Gunakan header <b>Nama, S1, S2, S3</b>. Nilai 1 berarti benar, nilai 0 berarti salah. Semua proses berjalan di browser.</p>
       </aside>
     </section>
 
@@ -50,38 +50,38 @@
       <article class="tool-card">
         <span>01</span>
         <h2>Tingkat Kesukaran</h2>
-        <p>Mengukur proporsi responden yang menjawab benar untuk menentukan butir sukar, sedang, atau mudah.</p>
+        <p>Melihat apakah soal tergolong sukar, sedang, atau mudah.</p>
       </article>
       <article class="tool-card">
         <span>02</span>
         <h2>Daya Pembeda</h2>
-        <p>Membandingkan kelompok atas dan bawah 27% untuk melihat kemampuan soal membedakan peserta.</p>
+        <p>Membandingkan kelompok atas dan bawah dengan proporsi 27%.</p>
       </article>
       <article class="tool-card">
         <span>03</span>
         <h2>Validitas Butir</h2>
-        <p>Menghitung korelasi Pearson antara skor butir dan skor total terkoreksi.</p>
+        <p>Mengukur hubungan butir soal dengan skor total terkoreksi.</p>
       </article>
       <article class="tool-card">
         <span>04</span>
         <h2>Reliabilitas</h2>
-        <p>Mengukur konsistensi internal tes menggunakan rumus KR-20.</p>
+        <p>Menilai konsistensi tes menggunakan koefisien KR-20.</p>
       </article>
     </section>
 
     <section id="inputSection" class="content-section">
       <div class="section-title">
-        <span>Alat Kerja / Input</span>
-        <h2>Pusat kendali data</h2>
-        <p>Gunakan template, unggah file, atau paste data manual. Setelah data terbaca, klik Hitung Analisis agar semua modul hasil aktif.</p>
+        <span>Input Data</span>
+        <h2>Siapkan data analisis</h2>
+        <p>Buat template kosong, unggah file, atau paste data manual. Setelah data terbaca, lanjutkan dengan tombol Hitung Analisis.</p>
       </div>
 
       <div class="tool-layout">
         <section class="panel">
           <div class="section-heading">
             <div>
-              <p class="section-kicker">Template</p>
-              <h3>Buat template matriks</h3>
+              <p class="section-kicker">Template Excel</p>
+              <h3>Buat format kosong</h3>
             </div>
           </div>
           <div class="form-grid">
@@ -109,18 +109,18 @@
         <section class="panel">
           <div class="section-heading">
             <div>
-              <p class="section-kicker">Upload</p>
-              <h3>Unggah dokumen atau isi manual</h3>
+              <p class="section-kicker">Data Analisis</p>
+              <h3>Unggah atau paste data</h3>
             </div>
           </div>
           <label class="dropzone" for="matrixFile">
-            <span>Klik untuk cari file</span>
+            <span>Upload Excel/CSV</span>
             <small>Excel atau CSV dengan header Nama, S1, S2, S3...</small>
             <input id="matrixFile" type="file" accept=".xlsx,.xls,.csv" />
           </label>
           <div class="manual-entry">
             <label>
-              Input teks manual
+              Paste data manual
               <textarea id="manualMatrixInput" rows="9" spellcheck="false" placeholder="Nama,S1,S2,S3,S4&#10;Raka,1,1,0,1&#10;Salsa,1,0,0,1"></textarea>
             </label>
             <div class="sample-row" aria-label="Contoh data manual">
@@ -136,20 +136,20 @@
 
       <div class="guide-grid">
         <article>
-          <h3>Format kolom</h3>
-          <p>Header soal harus S1, S2, S3, dan seterusnya.</p>
+          <h3>Kolom soal</h3>
+          <p>Gunakan S1, S2, S3, dan seterusnya untuk setiap butir.</p>
         </article>
         <article>
-          <h3>Format nilai</h3>
-          <p>Isi data soal hanya 1 untuk benar dan 0 untuk salah.</p>
+          <h3>Nilai data</h3>
+          <p>Isi setiap butir hanya dengan 1 untuk benar atau 0 untuk salah.</p>
         </article>
         <article>
-          <h3>Nama kosong</h3>
-          <p>Nama yang kosong otomatis diganti Responden A, B, C.</p>
+          <h3>Nama responden</h3>
+          <p>Nama kosong otomatis diganti menjadi Responden A, B, C.</p>
         </article>
         <article>
-          <h3>Privasi</h3>
-          <p>File diproses di browser dan tidak disimpan ke server.</p>
+          <h3>Penyimpanan</h3>
+          <p>Data diproses di browser dan tidak disimpan permanen.</p>
         </article>
       </div>
     </section>
@@ -158,8 +158,8 @@
       <div class="section-title inline-title">
         <div>
           <span>Preview Data</span>
-          <h2>Matriks terdeteksi</h2>
-          <p>Periksa jumlah responden dan jumlah soal. Tabel bisa digeser ke samping jika kolom soal banyak.</p>
+          <h2>Data terbaca</h2>
+          <p>Periksa jumlah responden dan soal sebelum menjalankan perhitungan.</p>
         </div>
         <button id="analyzeBtn" class="primary-btn" type="button">Hitung Analisis</button>
       </div>
@@ -173,8 +173,8 @@
       <div class="section-title inline-title">
         <div>
           <span>Hasil Umum</span>
-          <h2>Ringkasan analisis</h2>
-          <p>Bagian ini menampilkan performa peserta dan status awal perangkat tes.</p>
+          <h2>Ringkasan hasil</h2>
+          <p>Ikhtisar skor responden dan koefisien reliabilitas tes.</p>
         </div>
         <div class="button-row">
           <button id="exportExcelBtn" class="secondary-btn" type="button">Export Excel</button>
@@ -190,9 +190,9 @@
 
     <section id="difficultySection" class="content-section result-section hidden">
       <div class="section-title">
-        <span>Alat Kerja / 01</span>
-        <h2>Analisis tingkat kesukaran soal</h2>
-        <p>Indeks kesukaran menunjukkan seberapa besar proporsi responden yang menjawab benar pada tiap butir.</p>
+        <span>Analisis 01</span>
+        <h2>Tingkat kesukaran soal</h2>
+        <p>Indeks kesukaran menunjukkan proporsi responden yang menjawab benar pada setiap butir.</p>
       </div>
       <div class="analysis-grid">
         <div class="explain-box">
@@ -215,9 +215,9 @@
 
     <section id="discriminationSection" class="content-section result-section hidden">
       <div class="section-title">
-        <span>Alat Kerja / 02</span>
-        <h2>Analisis daya pembeda</h2>
-        <p>Daya pembeda menunjukkan kemampuan soal membedakan responden kelompok atas dan kelompok bawah.</p>
+        <span>Analisis 02</span>
+        <h2>Daya pembeda</h2>
+        <p>Daya pembeda menunjukkan kemampuan butir membedakan kelompok skor tinggi dan rendah.</p>
       </div>
       <div class="analysis-grid">
         <div class="explain-box">
@@ -236,9 +236,9 @@
 
     <section id="validitySection" class="content-section result-section hidden">
       <div class="section-title">
-        <span>Alat Kerja / 03</span>
-        <h2>Analisis validitas butir soal</h2>
-        <p>Validitas butir dihitung dari hubungan skor butir dengan skor total terkoreksi.</p>
+        <span>Analisis 03</span>
+        <h2>Validitas butir soal</h2>
+        <p>Validitas dihitung dari korelasi skor butir dengan skor total terkoreksi.</p>
       </div>
       <div class="analysis-grid">
         <div class="explain-box">
@@ -257,8 +257,8 @@
 
     <section id="reliabilitySection" class="content-section result-section hidden">
       <div class="section-title">
-        <span>Alat Kerja / 04</span>
-        <h2>Analisis reliabilitas perangkat tes</h2>
+        <span>Analisis 04</span>
+        <h2>Reliabilitas perangkat tes</h2>
         <p>Reliabilitas KR-20 menunjukkan konsistensi internal seluruh butir dalam satu tes.</p>
       </div>
       <div id="reliabilityCards" class="metric-grid"></div>
