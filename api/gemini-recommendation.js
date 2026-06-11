@@ -16,13 +16,14 @@ module.exports = async function handler(req, res) {
     const prompt = [
       "Buat narasi rekomendasi lengkap dalam bahasa Indonesia untuk hasil analisis butir soal berikut.",
       "Jangan hitung ulang rumus. Gunakan hasil statistik yang diberikan.",
+      "Analisis memakai matriks skor 1/0, bukan pilihan A/B/C/D dan bukan analisis distraktor.",
       "Jangan berhenti di tengah kalimat.",
       "Gunakan format berikut:",
       "1. Ringkasan kualitas tes",
       "2. Masalah utama",
       "3. Saran perbaikan",
       "4. Prioritas tindak lanjut",
-      "Tulis 180 sampai 260 kata. Gunakan bahasa yang jelas untuk guru.",
+      "Tulis 180 sampai 260 kata. Gunakan bahasa yang jelas untuk guru. Jangan menyebut distraktor.",
       JSON.stringify(payload, null, 2)
     ].join("\n\n");
 
@@ -108,15 +109,38 @@ function normalizePayload(payload) {
       reliability: Number(payload.summary?.reliability || 0),
       reliabilityCategory: String(payload.summary?.reliabilityCategory || "")
     },
+    itemCategoryCounts: {
+      difficulty: sanitizeCountObject(payload.itemCategoryCounts?.difficulty),
+      discrimination: sanitizeCountObject(payload.itemCategoryCounts?.discrimination),
+      validity: sanitizeCountObject(payload.itemCategoryCounts?.validity)
+    },
     problematicItems: Array.isArray(payload.problematicItems)
       ? payload.problematicItems.slice(0, 30).map((item) => ({
         number: Number(item.number || 0),
+        difficultyIndex: Number(item.difficultyIndex || 0),
+        difficulty: String(item.difficulty || ""),
+        discriminationIndex: Number(item.discriminationIndex || 0),
+        discrimination: String(item.discrimination || ""),
+        validityIndex: Number(item.validityIndex || 0),
+        validity: String(item.validity || "")
+      }))
+      : [],
+    topItems: Array.isArray(payload.topItems)
+      ? payload.topItems.slice(0, 10).map((item) => ({
+        number: Number(item.number || 0),
         difficulty: String(item.difficulty || ""),
         discrimination: String(item.discrimination || ""),
-        validity: String(item.validity || ""),
-        distractors: Array.isArray(item.distractors) ? item.distractors.map(String).slice(0, 5) : [],
-        recommendation: String(item.recommendation || "")
+        validity: String(item.validity || "")
       }))
       : []
   };
+}
+
+function sanitizeCountObject(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+  return Object.fromEntries(
+    Object.entries(value)
+      .slice(0, 12)
+      .map(([key, count]) => [String(key), Number(count || 0)])
+  );
 }

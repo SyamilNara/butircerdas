@@ -343,6 +343,13 @@ main {
   background: linear-gradient(135deg, var(--teal-dark), var(--teal));
 }
 
+.primary-btn:disabled,
+.secondary-btn:disabled {
+  cursor: wait;
+  opacity: 0.68;
+  transform: none;
+}
+
 .secondary-btn:hover {
   border-color: var(--teal);
   background: var(--teal-soft);
@@ -756,6 +763,25 @@ textarea:focus {
 .result-callout p {
   margin: 0;
   color: #33423f;
+}
+
+.ai-output {
+  min-height: 140px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: #fff;
+  color: #263632;
+  line-height: 1.68;
+  white-space: normal;
+}
+
+.ai-output p {
+  margin: 0 0 12px;
+}
+
+.ai-output p:last-child {
+  margin-bottom: 0;
 }
 
 .explain-box p + p,

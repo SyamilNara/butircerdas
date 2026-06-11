@@ -31,6 +31,7 @@ const result20 = testWorkbook(files.valid20, 30, 20, "20 soal");
 testTextInput();
 testInvalidWorkbook();
 testRender(result10.results);
+testAiRecommendationPayload(result10.results);
 testExports(result10.results);
 testNoDistractor();
 
@@ -122,6 +123,15 @@ function testRender(results) {
   checks.push({ check: "Render semua tabel analisis terpisah" });
 }
 
+function testAiRecommendationPayload(results) {
+  const payload = context.buildAiRecommendationPayload(results);
+  assert(payload.meta.questionCount === 10, "Payload AI membawa jumlah soal");
+  assert(payload.summary.reliability === results.reliability.kr20, "Payload AI membawa reliabilitas");
+  assert(payload.itemCategoryCounts.difficulty.Sedang >= 0, "Payload AI membawa ringkasan kategori");
+  assert(!JSON.stringify(payload).toLowerCase().includes("distraktor"), "Payload AI tidak membawa distraktor");
+  checks.push({ check: "Payload rekomendasi AI sesuai analisis matriks" });
+}
+
 function testExports(results) {
   context.__state.results = results;
   const excelCapture = {};
@@ -176,7 +186,8 @@ function createBrowserLikeContext() {
     "matrixFile", "dataTextInput", "useDataBtn", "messageBox", "previewSection", "detectedSummary", "previewTable",
     "analyzeBtn", "summaryCards", "scoreTable", "difficultyTable", "discriminationTable",
     "validityTable", "reliabilityCards", "reliabilityTable", "groupInfo", "difficultyInsight",
-    "discriminationInsight", "validityInsight", "reliabilityInsight", "exportExcelBtn", "exportPdfBtn"
+    "discriminationInsight", "validityInsight", "reliabilityInsight", "exportExcelBtn", "exportPdfBtn",
+    "aiRecommendationSection", "aiRecommendationBtn", "aiRecommendationStatus", "aiRecommendationOutput"
   ];
   ids.forEach((id) => { elements[id] = makeElement(id); });
   elements.examName.value = "Ujian Contoh";
@@ -184,7 +195,7 @@ function createBrowserLikeContext() {
   elements.questionCount.value = "10";
   elements.validityThreshold.value = "";
 
-  const resultNav = ["summarySection", "difficultySection", "discriminationSection", "validitySection", "reliabilitySection"].map((target) => ({
+  const resultNav = ["summarySection", "difficultySection", "discriminationSection", "validitySection", "reliabilitySection", "aiRecommendationSection"].map((target) => ({
     ...makeElement(`${target}Button`),
     dataset: { target },
     disabled: true

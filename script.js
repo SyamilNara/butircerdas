@@ -71,7 +71,10 @@ const els = {
   validityInsight: document.getElementById("validityInsight"),
   reliabilityInsight: document.getElementById("reliabilityInsight"),
   exportExcelBtn: document.getElementById("exportExcelBtn"),
-  exportPdfBtn: document.getElementById("exportPdfBtn")
+  exportPdfBtn: document.getElementById("exportPdfBtn"),
+  aiRecommendationBtn: document.getElementById("aiRecommendationBtn"),
+  aiRecommendationStatus: document.getElementById("aiRecommendationStatus"),
+  aiRecommendationOutput: document.getElementById("aiRecommendationOutput")
 };
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -82,6 +85,7 @@ document.addEventListener("DOMContentLoaded", () => {
   els.analyzeBtn.addEventListener("click", runAnalysis);
   els.exportExcelBtn.addEventListener("click", exportExcelReport);
   els.exportPdfBtn.addEventListener("click", exportPdfReport);
+  els.aiRecommendationBtn.addEventListener("click", requestAiRecommendation);
   els.menuToggle.addEventListener("click", toggleMobileMenu);
   document.querySelectorAll("[data-target]").forEach((button) => {
     button.addEventListener("click", () => {
@@ -538,6 +542,114 @@ function buildReliabilityInsight(reliability) {
   `;
 }
 
+async function requestAiRecommendation() {
+  if (!state.results) {
+    showMessage("Klik Hitung Analisis terlebih dahulu sebelum membuat rekomendasi AI.", "error");
+    return;
+  }
+
+  els.aiRecommendationBtn.disabled = true;
+  els.aiRecommendationBtn.textContent = "Membuat Narasi...";
+  els.aiRecommendationStatus.innerHTML = `
+    <h3>Status</h3>
+    <p>Sedang meminta narasi rekomendasi ke Gemini. Perhitungan statistik tidak berubah.</p>
+  `;
+
+  try {
+    const response = await fetch("/api/gemini-recommendation", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(buildAiRecommendationPayload(state.results))
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.error || "Gemini API gagal dipanggil.");
+
+    els.aiRecommendationOutput.innerHTML = formatAiText(data.recommendation || "Rekomendasi AI belum menghasilkan teks.");
+    els.aiRecommendationStatus.innerHTML = `
+      <h3>Status</h3>
+      <p>Narasi AI berhasil dibuat dari ringkasan hasil analisis.</p>
+    `;
+  } catch (error) {
+    const fallback = "Rekomendasi AI belum tersedia, tetapi hasil analisis tetap bisa digunakan.";
+    els.aiRecommendationOutput.innerHTML = `<p>${fallback}</p>`;
+    els.aiRecommendationStatus.innerHTML = `
+      <h3>Status</h3>
+      <p>${escapeHtml(error.message || fallback)}</p>
+    `;
+  } finally {
+    els.aiRecommendationBtn.disabled = false;
+    els.aiRecommendationBtn.textContent = "Buat Rekomendasi AI";
+  }
+}
+
+function buildAiRecommendationPayload(results) {
+  const discriminationByItem = new Map(results.discrimination.map((item) => [item.item, item]));
+  const validityByItem = new Map(results.validity.map((item) => [item.item, item]));
+
+  return {
+    meta: {
+      examName: results.meta.examName,
+      subject: results.meta.subject,
+      questionCount: results.meta.itemCount,
+      studentCount: results.meta.respondentCount
+    },
+    summary: {
+      average: results.summary.average,
+      highest: results.summary.highest,
+      lowest: results.summary.lowest,
+      reliability: results.reliability.kr20,
+      reliabilityCategory: results.reliability.category
+    },
+    itemCategoryCounts: {
+      difficulty: countBy(results.difficulty.map((item) => item.category)),
+      discrimination: countBy(results.discrimination.map((item) => item.category)),
+      validity: countBy(results.validity.map((item) => item.status))
+    },
+    problematicItems: results.meta.itemCount
+      ? results.difficulty
+        .map((item) => {
+          const discrimination = discriminationByItem.get(item.item);
+          const validity = validityByItem.get(item.item);
+          return {
+            number: item.item,
+            difficultyIndex: round(item.p, 3),
+            difficulty: item.category,
+            discriminationIndex: round(discrimination?.d || 0, 3),
+            discrimination: discrimination?.category || "",
+            validityIndex: round(validity?.r || 0, 3),
+            validity: validity?.status || ""
+          };
+        })
+        .filter((item) => (
+          item.difficulty !== "Sedang"
+          || ["Jelek", "Buruk"].includes(item.discrimination)
+          || item.validity === "Tidak Valid"
+        ))
+        .slice(0, 30)
+      : [],
+    topItems: results.difficulty
+      .map((item) => {
+        const discrimination = discriminationByItem.get(item.item);
+        const validity = validityByItem.get(item.item);
+        return {
+          number: item.item,
+          difficulty: item.category,
+          discrimination: discrimination?.category || "",
+          validity: validity?.status || ""
+        };
+      })
+      .filter((item) => item.difficulty === "Sedang" && ["Baik", "Sangat Baik"].includes(item.discrimination) && item.validity === "Valid")
+      .slice(0, 10)
+  };
+}
+
+function formatAiText(text) {
+  return String(text || "")
+    .split(/\n{2,}/)
+    .map((paragraph) => `<p>${escapeHtml(paragraph).replace(/\n/g, "<br>")}</p>`)
+    .join("");
+}
+
 function exportExcelReport() {
   if (!state.results) return;
   const results = state.results;
@@ -597,7 +709,7 @@ function addPdfTable(doc, title, rows, startY = null) {
 }
 
 function scrollToSection(id) {
-  const resultIds = ["summarySection", "difficultySection", "discriminationSection", "validitySection", "reliabilitySection"];
+  const resultIds = ["summarySection", "difficultySection", "discriminationSection", "validitySection", "reliabilitySection", "aiRecommendationSection"];
   if (resultIds.includes(id) && !state.results) {
     showMessage("Masukkan data matriks dan klik Hitung Analisis terlebih dahulu.", "error");
     document.getElementById("inputSection")?.scrollIntoView({ behavior: "smooth", block: "start" });
