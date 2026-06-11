@@ -1,47 +1,41 @@
 const state = {
-  workbookData: null,
-  results: null,
-  charts: {}
-};
-
-const optionSets = {
-  ABCD: ["A", "B", "C", "D"],
-  ABCDE: ["A", "B", "C", "D", "E"]
+  matrixData: null,
+  results: null
 };
 
 const els = {
   examName: document.getElementById("examName"),
   subjectName: document.getElementById("subjectName"),
   questionCount: document.getElementById("questionCount"),
-  optionSet: document.getElementById("optionSet"),
   validityThreshold: document.getElementById("validityThreshold"),
   downloadTemplateBtn: document.getElementById("downloadTemplateBtn"),
-  excelFile: document.getElementById("excelFile"),
+  matrixFile: document.getElementById("matrixFile"),
   messageBox: document.getElementById("messageBox"),
   previewSection: document.getElementById("previewSection"),
   detectedSummary: document.getElementById("detectedSummary"),
   previewTable: document.getElementById("previewTable"),
   analyzeBtn: document.getElementById("analyzeBtn"),
   summaryCards: document.getElementById("summaryCards"),
-  studentScoreTable: document.getElementById("studentScoreTable"),
-  itemAnalysisTable: document.getElementById("itemAnalysisTable"),
-  ruleRecommendation: document.getElementById("ruleRecommendation"),
-  aiRecommendation: document.getElementById("aiRecommendation"),
-  aiRecommendationBtn: document.getElementById("aiRecommendationBtn"),
+  scoreTable: document.getElementById("scoreTable"),
+  difficultyTable: document.getElementById("difficultyTable"),
+  discriminationTable: document.getElementById("discriminationTable"),
+  validityTable: document.getElementById("validityTable"),
+  reliabilityCards: document.getElementById("reliabilityCards"),
+  reliabilityTable: document.getElementById("reliabilityTable"),
+  groupInfo: document.getElementById("groupInfo"),
   exportExcelBtn: document.getElementById("exportExcelBtn"),
   exportPdfBtn: document.getElementById("exportPdfBtn")
 };
 
 document.addEventListener("DOMContentLoaded", () => {
-  setResultTabsEnabled(false);
+  setResultSections(false);
   els.downloadTemplateBtn.addEventListener("click", downloadTemplate);
-  els.excelFile.addEventListener("change", handleExcelUpload);
+  els.matrixFile.addEventListener("change", handleMatrixUpload);
   els.analyzeBtn.addEventListener("click", runAnalysis);
   els.exportExcelBtn.addEventListener("click", exportExcelReport);
   els.exportPdfBtn.addEventListener("click", exportPdfReport);
-  els.aiRecommendationBtn.addEventListener("click", generateAiRecommendation);
-  document.querySelectorAll(".tab-btn").forEach((button) => {
-    button.addEventListener("click", () => activateTab(button.dataset.tab));
+  document.querySelectorAll(".nav-btn").forEach((button) => {
+    button.addEventListener("click", () => scrollToSection(button.dataset.target));
   });
 });
 
@@ -49,39 +43,31 @@ function downloadTemplate() {
   const examName = cleanText(els.examName.value) || "Ujian";
   const subject = cleanText(els.subjectName.value) || "Mata Pelajaran";
   const count = Number(els.questionCount.value);
-  const optionSet = els.optionSet.value;
 
   if (!Number.isInteger(count) || count < 1 || count > 200) {
     showMessage("Jumlah soal harus berupa angka 1 sampai 200.", "error");
     return;
   }
 
-  const headers = ["No", "Nama", "Kelas", ...range(1, count).map(String)];
-  const answerRows = [
-    headers,
-    [1, "Contoh Peserta 1", "X A", ...range(1, count).map(() => "")],
-    [2, "Contoh Peserta 2", "X A", ...range(1, count).map(() => "")]
-  ];
-
-  const keyRows = [
-    ["Nomor", "Kunci"],
-    ...range(1, count).map((number) => [number, ""])
+  const headers = ["Nama", ...range(1, count).map((number) => `S${number}`)];
+  const sampleRows = [
+    ["Responden A", ...range(1, count).map((number) => (number % 4 === 0 ? 0 : 1))],
+    ["Responden B", ...range(1, count).map((number) => (number % 3 === 0 ? 0 : 1))],
+    ["", ...range(1, count).map((number) => (number % 5 === 0 ? 0 : 1))]
   ];
 
   const workbook = XLSX.utils.book_new();
   workbook.Props = {
     Title: examName,
     Subject: subject,
-    Comments: optionSet
+    Comments: "ButirCerdas matrix 1/0"
   };
-  XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet(answerRows), "Jawaban");
-  XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet(keyRows), "Kunci");
-  XLSX.writeFile(workbook, `template-butircerdas-${count}-soal.xlsx`);
-  showMessage("Template Excel berhasil dibuat. Isi sheet Jawaban dan Kunci, lalu upload kembali.", "success");
-  activateTab("upload");
+  XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet([headers, ...sampleRows]), "Matriks");
+  XLSX.writeFile(workbook, `template-butircerdas-matriks-${count}-soal.xlsx`);
+  showMessage("Template matriks berhasil dibuat. Isi nilai 1 untuk benar dan 0 untuk salah.", "success");
 }
 
-function handleExcelUpload(event) {
+function handleMatrixUpload(event) {
   const file = event.target.files[0];
   if (!file) return;
 
@@ -90,17 +76,17 @@ function handleExcelUpload(event) {
     try {
       const data = new Uint8Array(loadEvent.target.result);
       const workbook = XLSX.read(data, { type: "array" });
-      const parsed = parseWorkbook(workbook);
-      state.workbookData = parsed;
+      const parsed = parseMatrixWorkbook(workbook);
+      state.matrixData = parsed;
       state.results = null;
-      setResultTabsEnabled(false);
+      setResultSections(false);
       renderPreview(parsed);
       els.previewSection.classList.remove("hidden");
-      showMessage("File berhasil dibaca. Periksa preview, lalu klik Analisis Sekarang.", "success");
+      showMessage("File berhasil dibaca. Periksa matriks, lalu klik Hitung Analisis.", "success");
     } catch (error) {
-      state.workbookData = null;
+      state.matrixData = null;
       state.results = null;
-      setResultTabsEnabled(false);
+      setResultSections(false);
       els.previewSection.classList.add("hidden");
       showMessage(error.message, "error");
     }
@@ -108,443 +94,311 @@ function handleExcelUpload(event) {
   reader.readAsArrayBuffer(file);
 }
 
-function parseWorkbook(workbook) {
-  if (!workbook.SheetNames.includes("Jawaban")) {
-    throw new Error('Sheet "Jawaban" tidak ditemukan.');
-  }
-  if (!workbook.SheetNames.includes("Kunci")) {
-    throw new Error('Sheet "Kunci" tidak ditemukan.');
+function parseMatrixWorkbook(workbook) {
+  const sheetName = workbook.SheetNames.includes("Matriks") ? "Matriks" : workbook.SheetNames[0];
+  if (!sheetName) throw new Error("File tidak memiliki sheet.");
+
+  const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { header: 1, defval: "" });
+  const headerIndex = rows.findIndex((row) => row.some((cell) => /^s\d+$/i.test(cleanText(cell))));
+  if (headerIndex === -1) {
+    throw new Error('Header soal tidak ditemukan. Gunakan format kolom "Nama, S1, S2, S3, ...".');
   }
 
-  const answerRows = XLSX.utils.sheet_to_json(workbook.Sheets.Jawaban, { header: 1, defval: "" });
-  const keyRows = XLSX.utils.sheet_to_json(workbook.Sheets.Kunci, { header: 1, defval: "" });
-  const meta = readMeta(answerRows, workbook);
-  const optionList = optionSets[meta.optionSet] || optionSets.ABCDE;
-  const headerIndex = findHeaderRow(answerRows, "Nama");
-  const answerHeaders = answerRows[headerIndex].map(normalizeHeader);
-  const nameIndex = answerHeaders.findIndex((value) => value.toLowerCase() === "nama");
-  const classIndex = answerHeaders.findIndex((value) => value.toLowerCase() === "kelas");
-  const numberIndex = answerHeaders.findIndex((value) => value.toLowerCase() === "no");
-  const questionColumns = answerHeaders
-    .map((header, index) => ({ header, index, number: Number(header) }))
-    .filter((item) => Number.isInteger(item.number) && item.number > 0)
+  const headers = rows[headerIndex].map(cleanText);
+  const nameIndex = headers.findIndex((header) => ["nama", "name", "responden", "respondent"].includes(header.toLowerCase()));
+  const itemColumns = headers
+    .map((header, index) => ({ header, index, number: parseItemNumber(header) }))
+    .filter((item) => item.number !== null)
     .sort((a, b) => a.number - b.number);
 
-  if (nameIndex === -1) throw new Error('Kolom "Nama" tidak ditemukan di sheet Jawaban.');
-  if (questionColumns.length === 0) throw new Error("Kolom soal berupa angka tidak ditemukan di sheet Jawaban.");
-
-  const keyHeaderIndex = findHeaderRow(keyRows, "Nomor");
-  const keyHeaders = keyRows[keyHeaderIndex].map(normalizeHeader);
-  const keyNumberIndex = keyHeaders.findIndex((value) => value.toLowerCase() === "nomor");
-  const keyAnswerIndex = keyHeaders.findIndex((value) => value.toLowerCase() === "kunci");
-  if (keyNumberIndex === -1 || keyAnswerIndex === -1) {
-    throw new Error('Sheet Kunci harus memiliki kolom "Nomor" dan "Kunci".');
+  if (!itemColumns.length) {
+    throw new Error('Kolom soal tidak ditemukan. Gunakan header S1, S2, S3, dan seterusnya.');
   }
 
-  const keys = {};
-  const keyNumbers = [];
-  const duplicateKeys = [];
-  keyRows.slice(keyHeaderIndex + 1).forEach((row) => {
-    const number = Number(row[keyNumberIndex]);
-    const key = cleanAnswer(row[keyAnswerIndex]);
-    if (Number.isInteger(number) && number > 0) {
-      if (keyNumbers.includes(number)) duplicateKeys.push(number);
-      keyNumbers.push(number);
-      keys[number] = key;
-    }
-  });
+  const dataRows = rows.slice(headerIndex + 1).filter((row) => row.some((cell) => cleanText(cell) !== ""));
+  if (!dataRows.length) throw new Error("Data responden belum ada.");
 
-  if (duplicateKeys.length) {
-    throw new Error(`Nomor soal dobel di sheet Kunci: ${[...new Set(duplicateKeys)].join(", ")}.`);
-  }
-
-  const answerQuestionSet = new Set(questionColumns.map((column) => column.number));
-  const extraKeys = keyNumbers.filter((number) => !answerQuestionSet.has(number));
-  if (extraKeys.length) {
-    throw new Error(`Sheet Kunci memiliki nomor soal yang tidak ada di sheet Jawaban: ${extraKeys.join(", ")}.`);
-  }
-
-  if (keyNumbers.length !== questionColumns.length) {
-    throw new Error(`Jumlah soal di sheet Jawaban adalah ${questionColumns.length}, tetapi jumlah nomor soal di sheet Kunci adalah ${keyNumbers.length}.`);
-  }
-
-  const missingKeys = questionColumns.filter((column) => !keys[column.number]);
-  if (missingKeys.length) {
-    throw new Error(`Kunci jawaban belum lengkap untuk soal: ${missingKeys.map((item) => item.number).join(", ")}.`);
-  }
-
-  const invalidKeys = Object.entries(keys).filter(([, key]) => key && !optionList.includes(key));
-  if (invalidKeys.length) {
-    throw new Error(`Kunci jawaban hanya boleh ${optionList.join("/")}. Periksa nomor: ${invalidKeys.map(([number]) => number).join(", ")}.`);
-  }
-
-  const students = answerRows.slice(headerIndex + 1)
-    .filter((row) => row.some((cell) => cleanText(cell) !== ""))
-    .map((row, rowOffset) => {
-      const answers = {};
-      questionColumns.forEach((column) => {
-        answers[column.number] = cleanAnswer(row[column.index]);
-      });
-      return {
-        no: numberIndex >= 0 ? cleanText(row[numberIndex]) : String(rowOffset + 1),
-        name: cleanText(row[nameIndex]),
-        className: classIndex >= 0 ? cleanText(row[classIndex]) : "",
-        answers,
-        sourceRow: headerIndex + rowOffset + 2
-      };
-    });
-
-  if (!students.length) throw new Error("Data peserta belum ada di sheet Jawaban.");
-  const unnamed = students.find((student) => !student.name);
-  if (unnamed) throw new Error(`Nama peserta kosong pada baris ${unnamed.sourceRow}.`);
-
-  const invalidAnswers = [];
-  students.forEach((student) => {
-    questionColumns.forEach((column) => {
-      const answer = student.answers[column.number];
-      if (answer && !optionList.includes(answer)) {
-        invalidAnswers.push(`baris ${student.sourceRow} soal ${column.number}`);
+  const respondents = dataRows.map((row, rowOffset) => {
+    const name = nameIndex >= 0 ? cleanText(row[nameIndex]) : "";
+    const scores = {};
+    itemColumns.forEach((item) => {
+      const value = normalizeBinary(row[item.index]);
+      if (value === null) {
+        throw new Error(`Nilai pada baris ${headerIndex + rowOffset + 2}, ${item.header} harus 1 atau 0.`);
       }
+      scores[item.number] = value;
     });
+
+    return {
+      name: name || defaultRespondentName(rowOffset),
+      scores,
+      sourceRow: headerIndex + rowOffset + 2
+    };
   });
-  if (invalidAnswers.length) {
-    throw new Error(`Jawaban hanya boleh ${optionList.join("/")}. Periksa ${invalidAnswers.slice(0, 8).join(", ")}${invalidAnswers.length > 8 ? ", dan lainnya" : ""}.`);
+
+  return {
+    examName: cleanText(workbook.Props?.Title) || cleanText(els.examName.value) || "Ujian",
+    subject: cleanText(workbook.Props?.Subject) || cleanText(els.subjectName.value) || "Mata Pelajaran",
+    itemNumbers: itemColumns.map((item) => item.number),
+    respondents
+  };
+}
+
+function runAnalysis() {
+  if (!state.matrixData) {
+    showMessage("Upload file matriks 1/0 terlebih dahulu.", "error");
+    return;
   }
-
-  return {
-    examName: meta.examName,
-    subject: meta.subject,
-    optionSet: meta.optionSet,
-    optionList,
-    questionNumbers: questionColumns.map((column) => column.number),
-    keys,
-    students
-  };
+  const results = analyzeMatrix(state.matrixData);
+  state.results = results;
+  renderResults(results);
+  setResultSections(true);
+  showMessage("Analisis selesai. Hasil sudah dipisahkan berdasarkan jenis analisis.", "success");
+  scrollToSection("summarySection");
 }
 
-function readMeta(rows, workbook) {
-  const getValue = (label, fallback) => {
-    const row = rows.find((item) => cleanText(item[0]).toLowerCase() === label.toLowerCase());
-    return row ? cleanText(row[1]) || fallback : fallback;
-  };
-  const props = workbook?.Props || {};
-  const optionFromProps = cleanText(props.Comments).toUpperCase();
-  const optionSet = (getValue("Pilihan Jawaban", optionFromProps || els.optionSet.value).toUpperCase() === "ABCD") ? "ABCD" : "ABCDE";
-  return {
-    examName: getValue("Nama Ujian", cleanText(props.Title) || cleanText(els.examName.value) || "Ujian"),
-    subject: getValue("Mata Pelajaran", cleanText(props.Subject) || cleanText(els.subjectName.value) || "Mata Pelajaran"),
-    optionSet
-  };
-}
+function analyzeMatrix(data) {
+  const items = data.itemNumbers;
+  const n = data.respondents.length;
+  const k = items.length;
+  const validityThreshold = parseOptionalThreshold(els.validityThreshold.value);
 
-function findHeaderRow(rows, requiredHeader) {
-  const index = rows.findIndex((row) => row.map(normalizeHeader).includes(requiredHeader));
-  if (index === -1) throw new Error(`Baris header dengan kolom "${requiredHeader}" tidak ditemukan.`);
-  return index;
+  const respondents = data.respondents.map((respondent) => {
+    const total = items.reduce((sum, item) => sum + respondent.scores[item], 0);
+    return {
+      ...respondent,
+      total,
+      score: round((total / k) * 100, 2)
+    };
+  });
+
+  const totalScores = respondents.map((respondent) => respondent.total);
+  const totalVariance = populationVariance(totalScores);
+  const sorted = [...respondents].sort((a, b) => b.total - a.total || a.name.localeCompare(b.name));
+  const groupSize = Math.max(1, Math.round(n * 0.27));
+  const upperGroup = sorted.slice(0, groupSize);
+  const lowerGroup = sorted.slice(-groupSize);
+
+  const difficulty = items.map((item) => {
+    const correct = respondents.reduce((sum, respondent) => sum + respondent.scores[item], 0);
+    const wrong = n - correct;
+    const p = correct / n;
+    return {
+      item,
+      correct,
+      wrong,
+      n,
+      formula: `${correct} / ${n}`,
+      p,
+      category: categorizeDifficulty(p)
+    };
+  });
+
+  const discrimination = items.map((item) => {
+    const upperCorrect = upperGroup.reduce((sum, respondent) => sum + respondent.scores[item], 0);
+    const lowerCorrect = lowerGroup.reduce((sum, respondent) => sum + respondent.scores[item], 0);
+    const upperProp = upperCorrect / upperGroup.length;
+    const lowerProp = lowerCorrect / lowerGroup.length;
+    const d = upperProp - lowerProp;
+    return {
+      item,
+      upperCorrect,
+      upperTotal: upperGroup.length,
+      lowerCorrect,
+      lowerTotal: lowerGroup.length,
+      formula: `(${upperCorrect}/${upperGroup.length}) - (${lowerCorrect}/${lowerGroup.length})`,
+      d,
+      category: categorizeDiscrimination(d)
+    };
+  });
+
+  const validity = items.map((item) => {
+    const x = respondents.map((respondent) => respondent.scores[item]);
+    const y = respondents.map((respondent) => respondent.total - respondent.scores[item]);
+    const sums = correlationSums(x, y);
+    const r = pearsonFromSums(sums);
+    const category = categorizeValidity(r, validityThreshold);
+    return {
+      item,
+      sumX: sums.sumX,
+      sumY: sums.sumY,
+      sumXY: sums.sumXY,
+      sumX2: sums.sumX2,
+      sumY2: sums.sumY2,
+      r,
+      category: category.category,
+      status: category.status
+    };
+  });
+
+  const reliabilityItems = difficulty.map((item) => {
+    const p = item.p;
+    const q = 1 - p;
+    return {
+      item: item.item,
+      p,
+      q,
+      pq: p * q
+    };
+  });
+  const pqSum = reliabilityItems.reduce((sum, item) => sum + item.pq, 0);
+  const kr20 = k > 1 && totalVariance > 0 ? (k / (k - 1)) * (1 - (pqSum / totalVariance)) : 0;
+
+  return {
+    meta: {
+      examName: data.examName,
+      subject: data.subject,
+      respondentCount: n,
+      itemCount: k,
+      validityThreshold,
+      groupSize
+    },
+    respondents,
+    upperGroup,
+    lowerGroup,
+    difficulty,
+    discrimination,
+    validity,
+    reliability: {
+      items: reliabilityItems,
+      k,
+      pqSum,
+      totalVariance,
+      kr20: round(Math.max(-1, Math.min(1, kr20)), 3),
+      category: categorizeReliability(kr20),
+      formula: `${k}/(${k}-1) x (1 - ${round(pqSum, 3)} / ${round(totalVariance, 3)})`
+    },
+    summary: {
+      average: round(average(respondents.map((respondent) => respondent.score)), 2),
+      highest: round(Math.max(...respondents.map((respondent) => respondent.score)), 2),
+      lowest: round(Math.min(...respondents.map((respondent) => respondent.score)), 2)
+    }
+  };
 }
 
 function renderPreview(data) {
   els.detectedSummary.innerHTML = [
     metricCard("Nama Ujian", data.examName),
     metricCard("Mata Pelajaran", data.subject),
-    metricCard("Jumlah Peserta", data.students.length),
-    metricCard("Jumlah Soal", data.questionNumbers.length),
-    metricCard("Pilihan", data.optionList.join("/"))
+    metricCard("Jumlah Responden", data.respondents.length),
+    metricCard("Jumlah Soal", data.itemNumbers.length)
   ].join("");
 
-  const headers = ["No", "Nama", "Kelas", ...data.questionNumbers.map(String)];
-  const rows = data.students.slice(0, 5).map((student, index) => [
-    student.no || index + 1,
-    student.name,
-    student.className,
-    ...data.questionNumbers.map((number) => student.answers[number] || "")
-  ]);
-  els.previewTable.innerHTML = tableHtml(headers, rows);
-}
-
-function runAnalysis() {
-  if (!state.workbookData) {
-    showMessage("Upload file Excel terlebih dahulu.", "error");
-    return;
-  }
-  const results = analyzeData(state.workbookData);
-  state.results = results;
-  renderResults(results);
-  setResultTabsEnabled(true);
-  renderCharts(results);
-  activateTab("summary");
-  showMessage("Analisis selesai. Hasil sudah ditampilkan.", "success");
-}
-
-function analyzeData(data) {
-  const questionNumbers = data.questionNumbers;
-  const k = questionNumbers.length;
-  const scoredStudents = data.students.map((student, index) => {
-    const itemScores = {};
-    let correct = 0;
-    questionNumbers.forEach((number) => {
-      const isCorrect = student.answers[number] === data.keys[number];
-      itemScores[number] = isCorrect ? 1 : 0;
-      correct += itemScores[number];
-    });
-    return {
-      ...student,
-      rankSeed: index,
-      itemScores,
-      correct,
-      wrong: k - correct,
-      score: round((correct / k) * 100, 2)
-    };
-  });
-
-  const totalScores = scoredStudents.map((student) => student.correct);
-  const totalVariance = populationVariance(totalScores);
-  const validityThreshold = parseOptionalThreshold(els.validityThreshold?.value);
-  const sorted = [...scoredStudents].sort((a, b) => b.correct - a.correct || a.rankSeed - b.rankSeed);
-  const groupSize = Math.max(1, Math.round(scoredStudents.length * 0.27));
-  const upper = sorted.slice(0, groupSize);
-  const lower = sorted.slice(-groupSize);
-
-  const itemAnalyses = questionNumbers.map((number) => {
-    const correctCount = scoredStudents.reduce((sum, student) => sum + student.itemScores[number], 0);
-    const wrongCount = scoredStudents.length - correctCount;
-    const difficultyValue = correctCount / scoredStudents.length;
-    const upperProp = upper.reduce((sum, student) => sum + student.itemScores[number], 0) / upper.length;
-    const lowerProp = lower.reduce((sum, student) => sum + student.itemScores[number], 0) / lower.length;
-    const discriminationValue = upperProp - lowerProp;
-    const itemVector = scoredStudents.map((student) => student.itemScores[number]);
-    const correctedTotals = scoredStudents.map((student) => student.correct - student.itemScores[number]);
-    const validityValue = pearson(itemVector, correctedTotals);
-    const validity = categorizeValidity(validityValue, validityThreshold);
-    const distribution = {};
-    data.optionList.forEach((option) => {
-      distribution[option] = scoredStudents.filter((student) => student.answers[number] === option).length;
-    });
-    const ineffectiveDistractors = data.optionList.filter((option) => option !== data.keys[number] && distribution[option] === 0);
-    const difficultyCategory = categorizeDifficulty(difficultyValue);
-    const discriminationCategory = categorizeDiscrimination(discriminationValue);
-    const recommendation = makeRecommendation({
-      difficultyCategory,
-      discriminationCategory,
-      validityStatus: validity.status,
-      ineffectiveDistractors
-    });
-
-    return {
-      number,
-      key: data.keys[number],
-      correctCount,
-      wrongCount,
-      difficultyValue,
-      difficultyCategory,
-      discriminationValue,
-      discriminationCategory,
-      validityValue,
-      validityCategory: validity.category,
-      validityStatus: validity.status,
-      distribution,
-      ineffectiveDistractors,
-      recommendation
-    };
-  });
-
-  const pqSum = itemAnalyses.reduce((sum, item) => {
-    const p = item.difficultyValue;
-    return sum + p * (1 - p);
-  }, 0);
-  const reliability = k > 1 && totalVariance > 0 ? (k / (k - 1)) * (1 - (pqSum / totalVariance)) : 0;
-
-  const values = scoredStudents.map((student) => student.score);
-  return {
-    meta: {
-      examName: data.examName,
-      subject: data.subject,
-      optionList: data.optionList,
-      questionCount: k,
-      studentCount: scoredStudents.length,
-      validityThreshold
-    },
-    students: scoredStudents,
-    items: itemAnalyses,
-    summary: {
-      average: round(average(values), 2),
-      highest: round(Math.max(...values), 2),
-      lowest: round(Math.min(...values), 2),
-      reliability: round(Math.max(-1, Math.min(1, reliability)), 3),
-      reliabilityCategory: categorizeReliability(reliability)
-    }
-  };
+  els.previewTable.innerHTML = tableHtml(
+    ["Nama", ...data.itemNumbers.map((item) => `S${item}`)],
+    data.respondents.slice(0, 10).map((respondent) => [
+      respondent.name,
+      ...data.itemNumbers.map((item) => respondent.scores[item])
+    ])
+  );
 }
 
 function renderResults(results) {
   els.summaryCards.innerHTML = [
-    metricCard("Jumlah Peserta", results.meta.studentCount),
-    metricCard("Jumlah Soal", results.meta.questionCount),
-    metricCard("Rata-rata", results.summary.average),
-    metricCard("Tertinggi", results.summary.highest),
-    metricCard("Terendah", results.summary.lowest),
-    metricCard("Reliabilitas", `${results.summary.reliability} (${results.summary.reliabilityCategory})`)
+    metricCard("Jumlah Responden", results.meta.respondentCount),
+    metricCard("Jumlah Soal", results.meta.itemCount),
+    metricCard("Rata-rata Nilai", results.summary.average),
+    metricCard("Nilai Tertinggi", results.summary.highest),
+    metricCard("Nilai Terendah", results.summary.lowest),
+    metricCard("Reliabilitas KR-20", `${results.reliability.kr20} (${results.reliability.category})`)
   ].join("");
 
-  els.studentScoreTable.innerHTML = tableHtml(
-    ["No", "Nama", "Kelas", "Benar", "Salah", "Nilai"],
-    results.students.map((student, index) => [
-      student.no || index + 1,
-      student.name,
-      student.className,
-      student.correct,
-      student.wrong,
-      student.score
+  els.scoreTable.innerHTML = tableHtml(
+    ["No", "Nama", "Total Benar", "Total Salah", "Nilai"],
+    results.respondents.map((respondent, index) => [
+      index + 1,
+      respondent.name,
+      respondent.total,
+      results.meta.itemCount - respondent.total,
+      respondent.score
     ])
   );
 
-  els.itemAnalysisTable.innerHTML = tableHtml(
-    ["No Soal", "Kunci", "Benar", "Salah", "Kesukaran", "Daya Pembeda", "Validitas", "Distraktor", "Rekomendasi"],
-    results.items.map((item) => [
-      item.number,
-      item.key,
-      item.correctCount,
-      item.wrongCount,
-      `${round(item.difficultyValue, 3)} (${item.difficultyCategory})`,
-      `${round(item.discriminationValue, 3)} (${item.discriminationCategory})`,
-      validityDisplay(item, results.meta.validityThreshold),
-      distractorSummary(item, results.meta.optionList),
-      item.recommendation.label
+  els.difficultyTable.innerHTML = tableHtml(
+    ["No Soal", "Benar (B)", "Salah", "Jumlah (N)", "Perhitungan P = B/N", "Hasil P", "Kategori"],
+    results.difficulty.map((item) => [
+      `S${item.item}`,
+      item.correct,
+      item.wrong,
+      item.n,
+      item.formula,
+      round(item.p, 3),
+      item.category
     ])
   );
 
-  renderRuleRecommendation(results);
-}
+  els.groupInfo.innerHTML = `Kelompok atas dan bawah masing-masing berjumlah <strong>${results.meta.groupSize}</strong> responden.`;
+  els.discriminationTable.innerHTML = tableHtml(
+    ["No Soal", "BA", "JA", "BB", "JB", "Perhitungan D", "Hasil D", "Kategori"],
+    results.discrimination.map((item) => [
+      `S${item.item}`,
+      item.upperCorrect,
+      item.upperTotal,
+      item.lowerCorrect,
+      item.lowerTotal,
+      item.formula,
+      round(item.d, 3),
+      item.category
+    ])
+  );
 
-function renderRuleRecommendation(results) {
-  const counts = countBy(results.items, (item) => item.recommendation.label);
-  const flagged = results.items.filter((item) => item.recommendation.label !== "Dipakai");
-  els.ruleRecommendation.innerHTML = `
-    <h3>Rekomendasi Berbasis Rumus</h3>
-    <p>Reliabilitas tes: <strong>${results.summary.reliability}</strong> (${results.summary.reliabilityCategory}).</p>
-    <p>Ringkasan rekomendasi: ${Object.entries(counts).map(([label, count]) => `<strong>${count}</strong> ${escapeHtml(label)}`).join(", ")}.</p>
-    <ul>
-      ${flagged.length
-        ? flagged.slice(0, 12).map((item) => `<li>Soal ${item.number}: ${escapeHtml(item.recommendation.reason)}</li>`).join("")
-        : "<li>Semua soal berada pada kondisi yang layak dipakai menurut aturan dasar.</li>"}
-    </ul>
-  `;
-  els.aiRecommendation.innerHTML = "Rekomendasi AI opsional akan muncul di sini setelah tombol dibuat.";
-}
+  els.validityTable.innerHTML = tableHtml(
+    ["No Soal", "Sigma X", "Sigma Y", "Sigma XY", "Sigma X2", "Sigma Y2", "r hitung", "Keputusan"],
+    results.validity.map((item) => [
+      `S${item.item}`,
+      item.sumX,
+      item.sumY,
+      item.sumXY,
+      item.sumX2,
+      item.sumY2,
+      round(item.r, 3),
+      results.meta.validityThreshold !== null
+        ? `${item.status} (r tabel ${results.meta.validityThreshold})`
+        : `${item.category} / ${item.status}`
+    ])
+  );
 
-function renderCharts(results) {
-  destroyCharts();
-  const scoreBins = {
-    "0-49": 0,
-    "50-69": 0,
-    "70-84": 0,
-    "85-100": 0
-  };
-  results.students.forEach((student) => {
-    if (student.score < 50) scoreBins["0-49"] += 1;
-    else if (student.score < 70) scoreBins["50-69"] += 1;
-    else if (student.score < 85) scoreBins["70-84"] += 1;
-    else scoreBins["85-100"] += 1;
-  });
-
-  const difficultyCounts = countBy(results.items, (item) => item.difficultyCategory);
-  const recommendationCounts = countBy(results.items, (item) => item.recommendation.label);
-  const palette = ["#0f766e", "#c76a2d", "#3f6f97", "#8b5d33", "#8a3ffc"];
-
-  state.charts.score = new Chart(document.getElementById("scoreChart"), {
-    type: "bar",
-    data: { labels: Object.keys(scoreBins), datasets: [{ label: "Peserta", data: Object.values(scoreBins), backgroundColor: palette[0] }] },
-    options: chartOptions()
-  });
-  state.charts.difficulty = new Chart(document.getElementById("difficultyChart"), {
-    type: "doughnut",
-    data: { labels: Object.keys(difficultyCounts), datasets: [{ data: Object.values(difficultyCounts), backgroundColor: palette }] },
-    options: chartOptions()
-  });
-  state.charts.recommendation = new Chart(document.getElementById("recommendationChart"), {
-    type: "bar",
-    data: { labels: Object.keys(recommendationCounts), datasets: [{ label: "Soal", data: Object.values(recommendationCounts), backgroundColor: palette[1] }] },
-    options: chartOptions()
-  });
-  state.charts.reliability = new Chart(document.getElementById("reliabilityChart"), {
-    type: "bar",
-    data: { labels: [results.summary.reliabilityCategory], datasets: [{ label: "KR-20", data: [results.summary.reliability], backgroundColor: palette[2] }] },
-    options: { ...chartOptions(), scales: { y: { min: 0, max: 1 } } }
-  });
-}
-
-async function generateAiRecommendation() {
-  if (!state.results) return;
-  els.aiRecommendation.innerHTML = "Sedang membuat rekomendasi AI...";
-  try {
-    const payload = {
-      meta: state.results.meta,
-      summary: state.results.summary,
-      problematicItems: state.results.items
-        .filter((item) => item.recommendation.label !== "Dipakai")
-        .slice(0, 30)
-        .map((item) => ({
-          number: item.number,
-          difficulty: item.difficultyCategory,
-          discrimination: item.discriminationCategory,
-          validity: item.validityCategory,
-          validityStatus: item.validityStatus,
-          distractors: item.ineffectiveDistractors,
-          recommendation: item.recommendation.label
-        }))
-    };
-    const response = await fetch("/api/gemini-recommendation", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload)
-    });
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.error || "Rekomendasi AI belum tersedia.");
-    els.aiRecommendation.innerHTML = `<h3>Rekomendasi AI</h3><p>${escapeHtml(data.recommendation).replace(/\n/g, "<br>")}</p>`;
-  } catch (error) {
-    els.aiRecommendation.innerHTML = "Rekomendasi AI belum tersedia, tetapi hasil analisis tetap bisa digunakan.";
-  }
+  els.reliabilityCards.innerHTML = [
+    metricCard("Jumlah Soal (k)", results.reliability.k),
+    metricCard("Sigma pq", round(results.reliability.pqSum, 3)),
+    metricCard("Varians Total", round(results.reliability.totalVariance, 3)),
+    metricCard("KR-20", results.reliability.kr20),
+    metricCard("Kategori", results.reliability.category)
+  ].join("");
+  els.reliabilityTable.innerHTML = tableHtml(
+    ["No Soal", "p", "q = 1-p", "pq"],
+    results.reliability.items.map((item) => [
+      `S${item.item}`,
+      round(item.p, 3),
+      round(item.q, 3),
+      round(item.pq, 3)
+    ]).concat([["Rumus KR-20", "", "", results.reliability.formula]])
+  );
 }
 
 function exportExcelReport() {
   if (!state.results) return;
   const results = state.results;
   const workbook = XLSX.utils.book_new();
+
   XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet([
     ["ButirCerdas - Ringkasan"],
     ["Nama Ujian", results.meta.examName],
     ["Mata Pelajaran", results.meta.subject],
-    ["Jumlah Peserta", results.meta.studentCount],
-    ["Jumlah Soal", results.meta.questionCount],
+    ["Jumlah Responden", results.meta.respondentCount],
+    ["Jumlah Soal", results.meta.itemCount],
     ["Rata-rata Nilai", results.summary.average],
     ["Nilai Tertinggi", results.summary.highest],
     ["Nilai Terendah", results.summary.lowest],
-    ["Reliabilitas KR-20", results.summary.reliability],
-    ["Kategori Reliabilitas", results.summary.reliabilityCategory]
+    ["Reliabilitas KR-20", results.reliability.kr20],
+    ["Kategori Reliabilitas", results.reliability.category]
   ]), "Ringkasan");
-  XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet([
-    ["No", "Nama", "Kelas", "Benar", "Salah", "Nilai"],
-    ...results.students.map((student, index) => [student.no || index + 1, student.name, student.className, student.correct, student.wrong, student.score])
-  ]), "Nilai Peserta");
-  XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet([
-    ["No Soal", "Kunci", "Benar", "Salah", "Kesukaran", "Daya Pembeda", "Validitas", "Distraktor", "Rekomendasi", "Alasan"],
-    ...results.items.map((item) => [
-      item.number,
-      item.key,
-      item.correctCount,
-      item.wrongCount,
-      `${round(item.difficultyValue, 3)} (${item.difficultyCategory})`,
-      `${round(item.discriminationValue, 3)} (${item.discriminationCategory})`,
-      validityDisplay(item, results.meta.validityThreshold),
-      distractorSummary(item, results.meta.optionList),
-      item.recommendation.label,
-      item.recommendation.reason
-    ])
-  ]), "Analisis Butir");
-  XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet([
-    ["No Soal", "Kunci", ...results.meta.optionList],
-    ...results.items.map((item) => [item.number, item.key, ...results.meta.optionList.map((option) => item.distribution[option] || 0)])
-  ]), "Distraktor");
+
+  XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet(tableToRows(els.scoreTable)), "Skor Responden");
+  XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet(tableToRows(els.difficultyTable)), "Kesukaran");
+  XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet(tableToRows(els.discriminationTable)), "Daya Pembeda");
+  XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet(tableToRows(els.validityTable)), "Validitas");
+  XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet(tableToRows(els.reliabilityTable)), "Reliabilitas");
   XLSX.writeFile(workbook, "laporan-butircerdas.xlsx");
 }
 
@@ -558,138 +412,81 @@ function exportPdfReport() {
   doc.setFontSize(10);
   doc.text(`Nama Ujian: ${results.meta.examName}`, 14, 24);
   doc.text(`Mata Pelajaran: ${results.meta.subject}`, 14, 30);
-  doc.text(`Peserta: ${results.meta.studentCount} | Soal: ${results.meta.questionCount} | Rata-rata: ${results.summary.average} | KR-20: ${results.summary.reliability} (${results.summary.reliabilityCategory})`, 14, 36);
+  doc.text(`Responden: ${results.meta.respondentCount} | Soal: ${results.meta.itemCount} | KR-20: ${results.reliability.kr20} (${results.reliability.category})`, 14, 36);
 
-  doc.autoTable({
-    startY: 44,
-    head: [["No", "Nama", "Kelas", "Benar", "Salah", "Nilai"]],
-    body: results.students.map((student, index) => [student.no || index + 1, student.name, student.className, student.correct, student.wrong, student.score]),
-    styles: { fontSize: 8 },
-    headStyles: { fillColor: [15, 118, 110] }
-  });
-
-  doc.autoTable({
-    startY: doc.lastAutoTable.finalY + 10,
-    head: [["No", "Kunci", "Benar", "Salah", "Kesukaran", "Daya Pembeda", "Validitas", "Distraktor", "Rekomendasi"]],
-    body: results.items.map((item) => [
-      item.number,
-      item.key,
-      item.correctCount,
-      item.wrongCount,
-      `${round(item.difficultyValue, 3)} (${item.difficultyCategory})`,
-      `${round(item.discriminationValue, 3)} (${item.discriminationCategory})`,
-      validityDisplay(item, results.meta.validityThreshold),
-      distractorSummary(item, results.meta.optionList),
-      item.recommendation.label
-    ]),
-    styles: { fontSize: 7 },
-    headStyles: { fillColor: [15, 118, 110] }
-  });
-
-  doc.autoTable({
-    startY: doc.lastAutoTable.finalY + 10,
-    head: [["No Soal", "Rekomendasi", "Alasan"]],
-    body: results.items.map((item) => [
-      item.number,
-      item.recommendation.label,
-      item.recommendation.reason
-    ]),
-    styles: { fontSize: 8, cellWidth: "wrap" },
-    columnStyles: {
-      0: { cellWidth: 20 },
-      1: { cellWidth: 42 },
-      2: { cellWidth: 210 }
-    },
-    headStyles: { fillColor: [199, 106, 45] }
-  });
+  addPdfTable(doc, "Skor Responden", tableToRows(els.scoreTable), 44);
+  addPdfTable(doc, "Tingkat Kesukaran", tableToRows(els.difficultyTable));
+  addPdfTable(doc, "Daya Pembeda", tableToRows(els.discriminationTable));
+  addPdfTable(doc, "Validitas", tableToRows(els.validityTable));
+  addPdfTable(doc, "Reliabilitas", tableToRows(els.reliabilityTable));
   doc.save("laporan-butircerdas.pdf");
 }
 
-function activateTab(tabName) {
-  const targetButton = document.querySelector(`.tab-btn[data-tab="${tabName}"]`);
-  if (targetButton?.disabled) return;
-  const resultTabs = ["summary", "scores", "items", "charts", "recommendations"];
-  if (resultTabs.includes(tabName) && !state.results) {
-    showMessage("Upload file Excel dan klik Hitung Analisis terlebih dahulu.", "error");
-    document.getElementById("templateTab")?.scrollIntoView({ behavior: "smooth", block: "start" });
+function addPdfTable(doc, title, rows, startY = null) {
+  const y = startY || doc.lastAutoTable.finalY + 12;
+  doc.text(title, 14, y);
+  doc.autoTable({
+    startY: y + 4,
+    head: [rows[0]],
+    body: rows.slice(1),
+    styles: { fontSize: 7 },
+    headStyles: { fillColor: [15, 118, 110] }
+  });
+}
+
+function scrollToSection(id) {
+  const resultIds = ["summarySection", "difficultySection", "discriminationSection", "validitySection", "reliabilitySection"];
+  if (resultIds.includes(id) && !state.results) {
+    showMessage("Upload matriks dan klik Hitung Analisis terlebih dahulu.", "error");
+    document.getElementById("inputSection")?.scrollIntoView({ behavior: "smooth", block: "start" });
     return;
   }
-  document.querySelectorAll(".tab-btn").forEach((button) => button.classList.toggle("active", button.dataset.tab === tabName));
-  const target = document.getElementById(`${tabName}Tab`);
-  if (target) {
-    target.classList.remove("hidden");
-    target.scrollIntoView({ behavior: "smooth", block: "start" });
-  }
-  if (tabName === "charts" && state.results) {
-    renderCharts(state.results);
-  }
+  document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
-function setResultTabsEnabled(enabled) {
-  document.querySelectorAll(".result-tab").forEach((button) => {
+function setResultSections(enabled) {
+  document.querySelectorAll(".result-section").forEach((section) => {
+    section.classList.toggle("hidden", !enabled);
+  });
+  document.querySelectorAll(".result-nav").forEach((button) => {
     button.disabled = !enabled;
   });
-  ["summary", "scores", "items", "charts", "recommendations"].forEach((tabName) => {
-    document.getElementById(`${tabName}Tab`)?.classList.toggle("hidden", !enabled);
-  });
 }
 
-function makeRecommendation({ difficultyCategory, discriminationCategory, validityStatus, ineffectiveDistractors }) {
-  const isIdeal =
-    difficultyCategory === "Sedang" &&
-    ["Baik", "Sangat Baik"].includes(discriminationCategory) &&
-    validityStatus === "Valid";
-  const difficultyProblem = difficultyCategory === "Mudah" || difficultyCategory === "Sukar";
-  const discriminationProblem = ["Buruk", "Jelek"].includes(discriminationCategory);
-  const validityProblem = validityStatus === "Tidak Valid";
-  const distractorProblem = ineffectiveDistractors.length > 0;
-  const badIndicatorCount = [difficultyProblem, discriminationProblem, validityProblem, distractorProblem].filter(Boolean).length;
-
-  const notes = [];
-  if (difficultyProblem) notes.push(`tingkat kesukaran ${difficultyCategory.toLowerCase()}`);
-  if (discriminationProblem) notes.push("daya pembeda kurang");
-  if (validityProblem) notes.push("validitas tidak valid");
-  if (distractorProblem) notes.push(`Perbaiki pengecoh ${ineffectiveDistractors.join(", ")} karena tidak efektif`);
-
-  let label = isIdeal ? "Dipakai" : "Revisi";
-  if (discriminationProblem || validityProblem) label = "Revisi";
-  if (difficultyProblem && discriminationProblem) label = "Revisi Serius";
-  if (badIndicatorCount >= 3) label = "Dipertimbangkan Dibuang";
-
-  return {
-    label,
-    reason: notes.length ? `Perlu diperhatikan karena ${notes.join(", ")}.` : "Indikator utama sudah baik sehingga soal dapat dipakai."
-  };
+function parseItemNumber(value) {
+  const text = cleanText(value);
+  const match = text.match(/^s(\d+)$/i);
+  if (match) return Number(match[1]);
+  return null;
 }
 
-function validityDisplay(item, threshold) {
-  if (threshold !== null) {
-    return `${round(item.validityValue, 3)} (${item.validityStatus}; r tabel ${threshold})`;
-  }
-  return `${round(item.validityValue, 3)} (${item.validityCategory})`;
+function normalizeBinary(value) {
+  const text = cleanText(value);
+  if (text === "1") return 1;
+  if (text === "0") return 0;
+  if (value === 1) return 1;
+  if (value === 0) return 0;
+  return null;
 }
 
-function distractorSummary(item, optionList) {
-  const counts = optionList.map((option) => `${option}: ${item.distribution[option] || 0}`).join(", ");
-  const status = item.ineffectiveDistractors.length
-    ? `Tidak efektif: ${item.ineffectiveDistractors.join(", ")}`
-    : "Efektif";
-  return `${counts}. ${status}`;
+function defaultRespondentName(index) {
+  const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  if (index < alphabet.length) return `Responden ${alphabet[index]}`;
+  return `Responden ${index + 1}`;
 }
 
 function categorizeDifficulty(value) {
-  if (value > 0.7) return "Mudah";
   if (value <= 0.3) return "Sukar";
-  return "Sedang";
+  if (value <= 0.7) return "Sedang";
+  return "Mudah";
 }
 
 function categorizeDiscrimination(value) {
   if (value < 0) return "Buruk";
   if (value < 0.2) return "Jelek";
-  if (value >= 0.7) return "Sangat Baik";
-  if (value >= 0.4) return "Baik";
-  if (value >= 0.2) return "Cukup";
-  return "Jelek";
+  if (value < 0.4) return "Cukup";
+  if (value < 0.7) return "Baik";
+  return "Sangat Baik";
 }
 
 function categorizeValidity(value, threshold) {
@@ -712,25 +509,27 @@ function categorizeReliability(value) {
   return "Sangat Rendah";
 }
 
-function pearson(x, y) {
-  const avgX = average(x);
-  const avgY = average(y);
-  let numerator = 0;
-  let xSum = 0;
-  let ySum = 0;
-  x.forEach((value, index) => {
-    const dx = value - avgX;
-    const dy = y[index] - avgY;
-    numerator += dx * dy;
-    xSum += dx * dx;
-    ySum += dy * dy;
-  });
-  const denominator = Math.sqrt(xSum * ySum);
+function correlationSums(x, y) {
+  return x.reduce((acc, value, index) => {
+    const yValue = y[index];
+    acc.n += 1;
+    acc.sumX += value;
+    acc.sumY += yValue;
+    acc.sumXY += value * yValue;
+    acc.sumX2 += value * value;
+    acc.sumY2 += yValue * yValue;
+    return acc;
+  }, { n: 0, sumX: 0, sumY: 0, sumXY: 0, sumX2: 0, sumY2: 0 });
+}
+
+function pearsonFromSums(sums) {
+  const numerator = (sums.n * sums.sumXY) - (sums.sumX * sums.sumY);
+  const denominator = Math.sqrt(((sums.n * sums.sumX2) - (sums.sumX ** 2)) * ((sums.n * sums.sumY2) - (sums.sumY ** 2)));
   return denominator === 0 ? 0 : numerator / denominator;
 }
 
 function populationVariance(values) {
-  if (values.length < 1) return 0;
+  if (!values.length) return 0;
   const avg = average(values);
   return values.reduce((sum, value) => sum + ((value - avg) ** 2), 0) / values.length;
 }
@@ -739,18 +538,6 @@ function parseOptionalThreshold(value) {
   const number = Number(value);
   if (!Number.isFinite(number) || number <= 0) return null;
   return Math.min(1, Math.max(0, round(number, 3)));
-}
-
-function average(values) {
-  return values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : 0;
-}
-
-function countBy(items, getKey) {
-  return items.reduce((acc, item) => {
-    const key = getKey(item);
-    acc[key] = (acc[key] || 0) + 1;
-    return acc;
-  }, {});
 }
 
 function metricCard(label, value) {
@@ -764,11 +551,17 @@ function tableHtml(headers, rows) {
   `;
 }
 
+function tableToRows(table) {
+  const header = [...table.querySelectorAll("thead th")].map((cell) => cell.textContent);
+  const body = [...table.querySelectorAll("tbody tr")].map((row) => [...row.querySelectorAll("td")].map((cell) => cell.textContent));
+  return [header, ...body];
+}
+
 function formatCell(value) {
   const text = escapeHtml(String(value ?? ""));
-  if (["Dipakai"].includes(value)) return `<span class="badge success">${text}</span>`;
-  if (["Revisi", "Cukup", "Sedang"].includes(value)) return `<span class="badge warning">${text}</span>`;
-  if (["Revisi Serius", "Dipertimbangkan Dibuang"].includes(value)) return `<span class="badge danger">${text}</span>`;
+  if (["Valid", "Tinggi", "Sangat Tinggi", "Baik", "Sangat Baik"].includes(value)) return `<span class="badge success">${text}</span>`;
+  if (["Cukup", "Sedang", "Mudah"].includes(value)) return `<span class="badge warning">${text}</span>`;
+  if (["Tidak Valid", "Rendah", "Sangat Rendah", "Buruk", "Jelek", "Sukar"].includes(value)) return `<span class="badge danger">${text}</span>`;
   return text;
 }
 
@@ -776,31 +569,8 @@ function showMessage(message, type = "success") {
   els.messageBox.innerHTML = `<div class="message ${type}">${escapeHtml(message)}</div>`;
 }
 
-function destroyCharts() {
-  Object.values(state.charts).forEach((chart) => chart.destroy());
-  state.charts = {};
-}
-
-function chartOptions() {
-  return {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: { position: "bottom" }
-    }
-  };
-}
-
-function cleanAnswer(value) {
-  return cleanText(value).toUpperCase();
-}
-
-function cleanText(value) {
-  return String(value ?? "").trim();
-}
-
-function normalizeHeader(value) {
-  return cleanText(value);
+function average(values) {
+  return values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : 0;
 }
 
 function round(value, digits = 2) {
@@ -809,6 +579,10 @@ function round(value, digits = 2) {
 
 function range(start, end) {
   return Array.from({ length: end - start + 1 }, (_, index) => start + index);
+}
+
+function cleanText(value) {
+  return String(value ?? "").trim();
 }
 
 function escapeHtml(value) {

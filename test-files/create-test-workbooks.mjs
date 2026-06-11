@@ -5,79 +5,60 @@ import { SpreadsheetFile, Workbook } from "@oai/artifact-tool";
 
 const outputDir = path.dirname(fileURLToPath(import.meta.url));
 
-const keys5 = ["A", "B", "C", "D", "E"];
-const students5 = [
-  ["Ani", "X A", ["A", "B", "C", "D", "E"]],
-  ["Budi", "X A", ["A", "B", "C", "D", "A"]],
-  ["Cici", "X A", ["A", "B", "C", "A", "E"]],
-  ["Dani", "X A", ["A", "B", "D", "D", "A"]],
-  ["Eka", "X A", ["A", "C", "C", "A", "E"]],
-  ["Fajar", "X A", ["B", "B", "D", "D", "A"]],
-  ["Gita", "X A", ["A", "C", "D", "A", "B"]],
-  ["Hani", "X A", ["B", "C", "C", "A", "A"]],
-  ["Irfan", "X A", ["C", "A", "D", "B", "E"]],
-  ["Joko", "X A", ["B", "C", "D", "A", "A"]]
+const matrixRows = [
+  ["Ayu", 1, 1, 1, 0, 1, 1, 0, 1, 1, 1],
+  ["Bima", 1, 1, 0, 0, 1, 0, 0, 1, 0, 1],
+  ["Cici", 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+  ["Dedi", 0, 1, 0, 0, 1, 0, 0, 1, 0, 0],
+  ["Eka", 1, 0, 1, 0, 1, 1, 0, 0, 1, 1],
+  ["Fajar", 0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
+  ["Gina", 1, 1, 1, 1, 1, 1, 0, 1, 1, 1],
+  ["Hana", 1, 0, 1, 0, 0, 1, 0, 1, 0, 1],
+  ["Indra", 0, 0, 1, 0, 0, 0, 0, 0, 1, 0],
+  ["Jihan", 1, 1, 1, 1, 1, 0, 1, 1, 1, 1],
+  ["Kiki", 0, 1, 0, 0, 0, 0, 0, 1, 0, 0],
+  ["Lala", 1, 1, 1, 0, 1, 1, 1, 1, 0, 1],
+  ["Mira", 1, 0, 0, 0, 1, 0, 0, 0, 0, 1],
+  ["Nina", 1, 1, 1, 1, 1, 1, 0, 1, 1, 0],
+  ["Oki", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 ];
 
-const keys20 = ["A", "B", "C", "D", "E", "A", "B", "C", "D", "E", "A", "B", "C", "D", "E", "A", "B", "C", "D", "E"];
-const names = [
-  "Adi", "Bella", "Cahya", "Dewa", "Elin", "Farhan", "Gina", "Haris", "Indah", "Jihan",
-  "Karin", "Lukman", "Mira", "Naufal", "Oki", "Putri", "Qori", "Raka", "Salsa", "Tegar",
-  "Uma", "Vino", "Wulan", "Yoga", "Zahra", "Alya", "Bagas", "Citra", "Dimas", "Elsa"
-];
-const choices = ["A", "B", "C", "D", "E"];
-const students20 = names.map((name, studentIndex) => {
-  const ability = 0.92 - (studentIndex / (names.length - 1)) * 0.62;
-  const answers = keys20.map((key, questionIndex) => {
-    const difficultyPenalty = (questionIndex % 5) * 0.05;
-    const signal = ((studentIndex * 13 + questionIndex * 17) % 100) / 100;
-    const shouldCorrect = signal < Math.max(0.1, ability - difficultyPenalty);
-    return shouldCorrect ? key : choices[(choices.indexOf(key) + studentIndex + questionIndex + 1) % choices.length];
+const matrix20Rows = Array.from({ length: 30 }, (_, rowIndex) => {
+  const name = rowIndex === 2 ? "" : `Responden ${rowIndex + 1}`;
+  const ability = 0.9 - (rowIndex / 29) * 0.65;
+  const scores = Array.from({ length: 20 }, (_, itemIndex) => {
+    const signal = ((rowIndex * 11 + itemIndex * 17) % 100) / 100;
+    const difficulty = (itemIndex % 5) * 0.05;
+    return signal < Math.max(0.1, ability - difficulty) ? 1 : 0;
   });
-  return [name, `XI ${String.fromCharCode(65 + (studentIndex % 3))}`, answers];
+  return [name, ...scores];
 });
 
 await fs.mkdir(outputDir, { recursive: true });
-await createValidWorkbook("butircerdas-uji-5-soal-10-peserta.xlsx", "Uji 5 Soal", "Matematika", keys5, students5);
-await createValidWorkbook("butircerdas-uji-20-soal-30-peserta.xlsx", "Uji 20 Soal", "Bahasa Indonesia", keys20, students20);
+await createWorkbook("butircerdas-uji-10-soal-15-responden.xlsx", "Uji Matriks 10 Soal", "Matematika", matrixRows);
+await createWorkbook("butircerdas-uji-20-soal-30-responden.xlsx", "Uji Matriks 20 Soal", "Bahasa Indonesia", matrix20Rows);
 await createInvalidWorkbook("butircerdas-uji-salah-format.xlsx");
 
-async function createValidWorkbook(fileName, examName, subject, keys, students) {
+async function createWorkbook(fileName, examName, subject, rows) {
   const workbook = Workbook.create();
-  workbook.Props = { Title: examName, Subject: subject, Comments: "ABCDE" };
-  const answerSheet = workbook.worksheets.add("Jawaban");
-  const keySheet = workbook.worksheets.add("Kunci");
-
-  const questionHeaders = keys.map((_, index) => String(index + 1));
-  answerSheet.getRangeByIndexes(0, 0, students.length + 1, keys.length + 3).values = [
-    ["No", "Nama", "Kelas", ...questionHeaders],
-    ...students.map((student, index) => [index + 1, student[0], student[1], ...student[2]])
-  ];
-  keySheet.getRangeByIndexes(0, 0, keys.length + 1, 2).values = [
-    ["Nomor", "Kunci"],
-    ...keys.map((key, index) => [index + 1, key])
-  ];
-  styleSheet(answerSheet, keys.length + 3);
-  styleSheet(keySheet, 2);
+  workbook.Props = { Title: examName, Subject: subject, Comments: "ButirCerdas matrix 1/0" };
+  const sheet = workbook.worksheets.add("Matriks");
+  const questionCount = rows[0].length - 1;
+  const headers = ["Nama", ...Array.from({ length: questionCount }, (_, index) => `S${index + 1}`)];
+  sheet.getRangeByIndexes(0, 0, rows.length + 1, headers.length).values = [headers, ...rows];
+  styleSheet(sheet, headers.length);
   await saveWorkbook(workbook, fileName);
 }
 
 async function createInvalidWorkbook(fileName) {
   const workbook = Workbook.create();
-  const answerSheet = workbook.worksheets.add("Jawaban");
-  const keySheet = workbook.worksheets.add("Kunci");
-
-  answerSheet.getRange("A1:E3").values = [
-    ["No", "Peserta", "Kelas", "1", "2"],
-    [1, "Salah Header", "X A", "A", "B"],
-    [2, "Format Rusak", "X A", "C", "D"]
+  const sheet = workbook.worksheets.add("Matriks");
+  sheet.getRange("A1:C3").values = [
+    ["Nama", "Soal 1", "Soal 2"],
+    ["Salah", "A", "B"],
+    ["Format", "C", "D"]
   ];
-  keySheet.getRange("A1:B2").values = [
-    ["Nomor", "Kunci"],
-    [1, "A"]
-  ];
-  styleSheet(answerSheet, 5);
-  styleSheet(keySheet, 2);
+  styleSheet(sheet, 3);
   await saveWorkbook(workbook, fileName);
 }
 
