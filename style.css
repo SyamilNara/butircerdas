@@ -118,6 +118,10 @@ button {
   max-width: min(760px, 66vw);
 }
 
+.menu-toggle {
+  display: none;
+}
+
 .nav-btn {
   min-height: 36px;
   padding: 7px 12px;
@@ -882,8 +886,11 @@ tr:last-child td {
   }
 
   .topbar {
+    position: sticky;
     min-height: auto;
     padding: 10px;
+    padding-right: 66px;
+    backdrop-filter: none;
   }
 
   .brand {
@@ -895,18 +902,77 @@ tr:last-child td {
     height: 38px;
   }
 
-  .page-nav {
+  .menu-toggle {
+    position: fixed;
+    top: 14px;
+    right: 14px;
+    z-index: 60;
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 5px;
+    gap: 4px;
+    width: 44px;
+    height: 44px;
+    place-content: center;
+    border: 1px solid rgba(15, 118, 110, 0.28);
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.94);
+    box-shadow: 0 14px 28px rgba(11, 43, 38, 0.18);
+    cursor: pointer;
+  }
+
+  .menu-toggle span {
+    display: block;
+    width: 20px;
+    height: 2px;
+    border-radius: 999px;
+    background: var(--teal-dark);
+    transition: transform 0.18s ease, opacity 0.18s ease;
+  }
+
+  .menu-open .menu-toggle span:nth-child(1) {
+    transform: translateY(6px) rotate(45deg);
+  }
+
+  .menu-open .menu-toggle span:nth-child(2) {
+    opacity: 0;
+  }
+
+  .menu-open .menu-toggle span:nth-child(3) {
+    transform: translateY(-6px) rotate(-45deg);
+  }
+
+  .page-nav {
+    position: fixed;
+    top: 66px;
+    right: 14px;
+    z-index: 55;
+    display: grid;
+    width: min(250px, calc(100vw - 28px));
+    max-width: none;
+    grid-template-columns: 1fr;
+    gap: 7px;
+    padding: 12px;
+    border: 1px solid rgba(15, 118, 110, 0.18);
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.96);
+    box-shadow: 0 20px 44px rgba(11, 43, 38, 0.18);
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-8px);
+    transition: opacity 0.18s ease, transform 0.18s ease;
+  }
+
+  .menu-open .page-nav {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
   }
 
   .nav-btn {
     width: 100%;
-    min-height: 32px;
-    padding: 6px 9px;
+    min-height: 38px;
+    padding: 8px 10px;
     min-width: 0;
-    font-size: 0.86rem;
+    font-size: 0.9rem;
     white-space: normal;
   }
 

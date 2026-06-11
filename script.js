@@ -52,6 +52,7 @@ const els = {
   matrixFile: document.getElementById("matrixFile"),
   dataTextInput: document.getElementById("dataTextInput"),
   useDataBtn: document.getElementById("useDataBtn"),
+  menuToggle: document.querySelector(".menu-toggle"),
   messageBox: document.getElementById("messageBox"),
   previewSection: document.getElementById("previewSection"),
   detectedSummary: document.getElementById("detectedSummary"),
@@ -81,13 +82,18 @@ document.addEventListener("DOMContentLoaded", () => {
   els.analyzeBtn.addEventListener("click", runAnalysis);
   els.exportExcelBtn.addEventListener("click", exportExcelReport);
   els.exportPdfBtn.addEventListener("click", exportPdfReport);
+  els.menuToggle.addEventListener("click", toggleMobileMenu);
   document.querySelectorAll("[data-target]").forEach((button) => {
     button.addEventListener("click", () => {
       scrollToSection(button.dataset.target);
+      closeMobileMenu();
     });
   });
   document.querySelectorAll("[data-sample]").forEach((button) => {
     button.addEventListener("click", () => fillDataSample(button.dataset.sample));
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") closeMobileMenu();
   });
   setActiveNav("inputSection");
 });
@@ -607,6 +613,18 @@ function setActiveNav(id) {
   document.querySelectorAll(".nav-btn").forEach((button) => {
     button.classList.toggle("active", button.dataset.target === id);
   });
+}
+
+function toggleMobileMenu() {
+  const isOpen = document.body.classList.toggle("menu-open");
+  els.menuToggle.setAttribute("aria-expanded", String(isOpen));
+  els.menuToggle.setAttribute("aria-label", isOpen ? "Tutup navigasi" : "Buka navigasi");
+}
+
+function closeMobileMenu() {
+  document.body.classList.remove("menu-open");
+  els.menuToggle.setAttribute("aria-expanded", "false");
+  els.menuToggle.setAttribute("aria-label", "Buka navigasi");
 }
 
 function setResultSections(enabled) {

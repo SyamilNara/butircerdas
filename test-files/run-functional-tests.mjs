@@ -190,17 +190,23 @@ function createBrowserLikeContext() {
     disabled: true
   }));
   const resultSections = resultNav.map((button) => makeElement(button.dataset.target));
+  const menuToggle = makeElement("menuToggle");
   const sampleButtons = ["mini", "medium", "blankNames"].map((sample) => ({
     ...makeElement(`${sample}SampleButton`),
     dataset: { sample }
   }));
 
   const document = {
+    body: makeElement("body"),
     addEventListener(event, callback) {
       if (event === "DOMContentLoaded") callback();
     },
     getElementById(id) {
       return elements[id] || makeElement(id);
+    },
+    querySelector(selector) {
+      if (selector === ".menu-toggle") return menuToggle;
+      return null;
     },
     querySelectorAll(selector) {
       if (selector === ".nav-btn") return resultNav;
@@ -237,6 +243,7 @@ function makeElement(id) {
     dataset: {},
     classList: makeClassList(),
     addEventListener() {},
+    setAttribute(name, value) { this[name] = value; },
     scrollIntoView() {},
     querySelectorAll(selector) {
       if (selector === "thead th") {
@@ -276,8 +283,17 @@ function makeClassList(initial = []) {
     add(...items) { items.forEach((item) => classes.add(item)); },
     remove(...items) { items.forEach((item) => classes.delete(item)); },
     toggle(item, force) {
+      if (force === undefined) {
+        if (classes.has(item)) {
+          classes.delete(item);
+          return false;
+        }
+        classes.add(item);
+        return true;
+      }
       if (force) classes.add(item);
       else classes.delete(item);
+      return Boolean(force);
     },
     contains(item) { return classes.has(item); }
   };
