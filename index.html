@@ -33,7 +33,7 @@
       <div class="hero-copy">
         <p class="eyebrow">Perangkat tes dikotomi</p>
         <h1>Evaluasi instrumen tes dari matriks 1/0.</h1>
-        <p class="lead">Upload Excel atau CSV berisi skor benar-salah. ButirCerdas menghitung tingkat kesukaran, daya pembeda, validitas butir, dan reliabilitas KR-20 langsung di browser tanpa login dan tanpa database.</p>
+        <p class="lead">Upload Excel/CSV atau paste data manual berisi skor benar-salah. ButirCerdas menghitung tingkat kesukaran, daya pembeda, validitas butir, dan reliabilitas KR-20 langsung di browser tanpa login dan tanpa database.</p>
         <div class="hero-actions">
           <button class="primary-btn" type="button" data-target="inputSection">Mulai Analisis</button>
           <button class="secondary-btn" type="button" data-target="toolOverview">Lihat Alat</button>
@@ -73,7 +73,7 @@
       <div class="section-title">
         <span>Alat Kerja / Input</span>
         <h2>Pusat kendali data</h2>
-        <p>Gunakan template atau unggah file milikmu. Setelah file terbaca, klik Hitung Analisis agar semua modul hasil aktif.</p>
+        <p>Gunakan template, unggah file, atau paste data manual. Setelah data terbaca, klik Hitung Analisis agar semua modul hasil aktif.</p>
       </div>
 
       <div class="tool-layout">
@@ -110,7 +110,7 @@
           <div class="section-heading">
             <div>
               <p class="section-kicker">Upload</p>
-              <h3>Unggah dokumen matriks</h3>
+              <h3>Unggah dokumen atau isi manual</h3>
             </div>
           </div>
           <label class="dropzone" for="matrixFile">
@@ -118,6 +118,18 @@
             <small>Excel atau CSV dengan header Nama, S1, S2, S3...</small>
             <input id="matrixFile" type="file" accept=".xlsx,.xls,.csv" />
           </label>
+          <div class="manual-entry">
+            <label>
+              Input teks manual
+              <textarea id="manualMatrixInput" rows="9" spellcheck="false" placeholder="Nama,S1,S2,S3,S4&#10;Ayu,1,1,0,1&#10;Bima,1,0,0,1"></textarea>
+            </label>
+            <div class="sample-row" aria-label="Contoh data manual">
+              <button class="sample-btn" type="button" data-sample="mini">Contoh 5 Soal</button>
+              <button class="sample-btn" type="button" data-sample="medium">Contoh 10 Soal</button>
+              <button class="sample-btn" type="button" data-sample="blankNames">Contoh Nama Kosong</button>
+            </div>
+            <button id="useManualDataBtn" class="secondary-btn full-btn" type="button">Gunakan Data Manual</button>
+          </div>
           <div id="messageBox" class="message-box" role="status" aria-live="polite"></div>
         </section>
       </div>

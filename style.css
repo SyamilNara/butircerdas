@@ -38,7 +38,8 @@ body {
 }
 
 button,
-input {
+input,
+textarea {
   font: inherit;
 }
 
@@ -356,9 +357,9 @@ label {
   line-height: 1.35;
 }
 
-input {
+input,
+textarea {
   width: 100%;
-  min-height: 44px;
   padding: 10px 12px;
   border: 1px solid var(--line);
   border-radius: 6px;
@@ -367,7 +368,20 @@ input {
   outline: none;
 }
 
-input:focus {
+input {
+  min-height: 44px;
+}
+
+textarea {
+  min-height: 168px;
+  resize: vertical;
+  font-family: Consolas, "Courier New", monospace;
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+input:focus,
+textarea:focus {
   border-color: var(--teal);
   box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.13);
 }
@@ -399,6 +413,34 @@ input:focus {
 
 .dropzone input {
   display: none;
+}
+
+.manual-entry {
+  display: grid;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.sample-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.sample-btn {
+  min-height: 38px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #fff;
+  color: var(--teal-dark);
+  cursor: pointer;
+  font-weight: 900;
+}
+
+.sample-btn:hover {
+  border-color: var(--teal);
+  background: #edf7f4;
 }
 
 .message-box {
@@ -689,6 +731,7 @@ tr:last-child td {
   .tool-overview,
   .form-grid,
   .guide-grid,
+  .sample-row,
   .metric-grid {
     grid-template-columns: 1fr;
   }

@@ -28,6 +28,7 @@ const checks = [];
 testTemplateDownload();
 const result10 = testWorkbook(files.valid10, 15, 10, "10 soal");
 const result20 = testWorkbook(files.valid20, 30, 20, "20 soal");
+testManualInput();
 testInvalidWorkbook();
 testRender(result10.results);
 testExports(result10.results);
@@ -91,6 +92,21 @@ function testInvalidWorkbook() {
   }
   assert(message.includes("Header soal tidak ditemukan"), "File salah format memunculkan validasi jelas");
   checks.push({ check: "Validasi file salah format", message });
+}
+
+function testManualInput() {
+  context.fillManualSample("medium");
+  assert(context.__elements.manualMatrixInput.value.includes("Nama,S1,S2"), "Contoh manual mengisi textarea");
+  context.handleManualMatrix();
+  const parsed = context.__state.matrixData;
+  assert(parsed.respondents.length === 15, "Input manual contoh 10 soal membaca 15 responden");
+  assert(parsed.itemNumbers.length === 10, "Input manual contoh 10 soal membaca 10 butir");
+  assert(context.__elements.previewTable.innerHTML.includes("<th>S10</th>"), "Preview manual menampilkan soal terakhir");
+
+  context.fillManualSample("blankNames");
+  const blankParsed = context.parseManualMatrix(context.__elements.manualMatrixInput.value);
+  assert(blankParsed.respondents[0].name === "Responden A", "Input manual nama kosong menjadi Responden A");
+  checks.push({ check: "Input teks manual dan contoh data berjalan" });
 }
 
 function testRender(results) {
@@ -157,7 +173,7 @@ function createBrowserLikeContext() {
   const elements = {};
   const ids = [
     "examName", "subjectName", "questionCount", "validityThreshold", "downloadTemplateBtn",
-    "matrixFile", "messageBox", "previewSection", "detectedSummary", "previewTable",
+    "matrixFile", "manualMatrixInput", "useManualDataBtn", "messageBox", "previewSection", "detectedSummary", "previewTable",
     "analyzeBtn", "summaryCards", "scoreTable", "difficultyTable", "discriminationTable",
     "validityTable", "reliabilityCards", "reliabilityTable", "groupInfo", "difficultyInsight",
     "discriminationInsight", "validityInsight", "reliabilityInsight", "exportExcelBtn", "exportPdfBtn"
@@ -174,6 +190,10 @@ function createBrowserLikeContext() {
     disabled: true
   }));
   const resultSections = resultNav.map((button) => makeElement(button.dataset.target));
+  const sampleButtons = ["mini", "medium", "blankNames"].map((sample) => ({
+    ...makeElement(`${sample}SampleButton`),
+    dataset: { sample }
+  }));
 
   const document = {
     addEventListener(event, callback) {
@@ -185,6 +205,7 @@ function createBrowserLikeContext() {
     querySelectorAll(selector) {
       if (selector === ".nav-btn") return resultNav;
       if (selector === "[data-target]") return resultNav;
+      if (selector === "[data-sample]") return sampleButtons;
       if (selector === ".result-nav") return resultNav;
       if (selector === ".result-section") return resultSections;
       return [];

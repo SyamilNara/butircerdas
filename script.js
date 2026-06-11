@@ -1,3 +1,43 @@
+const MANUAL_SAMPLES = {
+  mini: `
+Nama,S1,S2,S3,S4,S5
+Ayu,1,1,1,0,1
+Bima,1,0,1,0,1
+Cici,1,1,1,1,1
+Dedi,0,1,0,0,1
+Eka,1,0,1,0,0
+Fajar,0,0,0,0,1
+Gina,1,1,1,1,0
+Hana,1,0,1,0,1
+  `,
+  medium: `
+Nama,S1,S2,S3,S4,S5,S6,S7,S8,S9,S10
+Ayu,1,1,1,0,1,1,0,1,1,1
+Bima,1,1,0,0,1,0,0,1,0,1
+Cici,1,1,1,1,1,1,1,1,1,1
+Dedi,0,1,0,0,1,0,0,1,0,0
+Eka,1,0,1,0,1,1,0,0,1,1
+Fajar,0,0,0,0,1,0,0,0,0,0
+Gina,1,1,1,1,1,1,0,1,1,1
+Hana,1,0,1,0,0,1,0,1,0,1
+Indra,0,0,1,0,0,0,0,0,1,0
+Jihan,1,1,1,1,1,0,1,1,1,1
+Kiki,0,1,0,0,0,0,0,1,0,0
+Lala,1,1,1,0,1,1,1,1,0,1
+Mira,1,0,0,0,1,0,0,0,0,1
+Nina,1,1,1,1,1,1,0,1,1,0
+Oki,0,0,0,0,0,0,0,0,0,0
+  `,
+  blankNames: `
+Nama,S1,S2,S3,S4,S5,S6
+,1,1,0,1,1,0
+,1,0,0,1,0,1
+,0,1,1,0,1,1
+,1,1,1,1,1,1
+,0,0,1,0,0,1
+  `
+};
+
 const state = {
   matrixData: null,
   results: null
@@ -10,6 +50,8 @@ const els = {
   validityThreshold: document.getElementById("validityThreshold"),
   downloadTemplateBtn: document.getElementById("downloadTemplateBtn"),
   matrixFile: document.getElementById("matrixFile"),
+  manualMatrixInput: document.getElementById("manualMatrixInput"),
+  useManualDataBtn: document.getElementById("useManualDataBtn"),
   messageBox: document.getElementById("messageBox"),
   previewSection: document.getElementById("previewSection"),
   detectedSummary: document.getElementById("detectedSummary"),
@@ -35,11 +77,15 @@ document.addEventListener("DOMContentLoaded", () => {
   setResultSections(false);
   els.downloadTemplateBtn.addEventListener("click", downloadTemplate);
   els.matrixFile.addEventListener("change", handleMatrixUpload);
+  els.useManualDataBtn.addEventListener("click", handleManualMatrix);
   els.analyzeBtn.addEventListener("click", runAnalysis);
   els.exportExcelBtn.addEventListener("click", exportExcelReport);
   els.exportPdfBtn.addEventListener("click", exportPdfReport);
   document.querySelectorAll("[data-target]").forEach((button) => {
     button.addEventListener("click", () => scrollToSection(button.dataset.target));
+  });
+  document.querySelectorAll("[data-sample]").forEach((button) => {
+    button.addEventListener("click", () => fillManualSample(button.dataset.sample));
   });
 });
 
@@ -96,6 +142,44 @@ function handleMatrixUpload(event) {
     }
   };
   reader.readAsArrayBuffer(file);
+}
+
+function handleManualMatrix() {
+  try {
+    const parsed = parseManualMatrix(els.manualMatrixInput.value);
+    state.matrixData = parsed;
+    state.results = null;
+    setResultSections(false);
+    renderPreview(parsed);
+    els.previewSection.classList.remove("hidden");
+    showMessage("Data manual berhasil dibaca. Periksa preview, lalu klik Hitung Analisis.", "success");
+  } catch (error) {
+    state.matrixData = null;
+    state.results = null;
+    setResultSections(false);
+    els.previewSection.classList.add("hidden");
+    showMessage(error.message, "error");
+  }
+}
+
+function fillManualSample(sampleKey) {
+  const sample = MANUAL_SAMPLES[sampleKey] || MANUAL_SAMPLES.medium;
+  els.manualMatrixInput.value = sample.trim();
+  showMessage("Contoh data sudah dimasukkan. Klik Gunakan Data Manual untuk membaca data.", "success");
+}
+
+function parseManualMatrix(text) {
+  const content = cleanText(text);
+  if (!content) {
+    throw new Error("Input manual masih kosong. Masukkan data dengan format Nama,S1,S2,S3,...");
+  }
+
+  const workbook = XLSX.read(content, { type: "string", raw: true });
+  workbook.Props = {
+    Title: cleanText(els.examName.value) || "Data Manual",
+    Subject: cleanText(els.subjectName.value) || "Mata Pelajaran"
+  };
+  return parseMatrixWorkbook(workbook);
 }
 
 function parseMatrixWorkbook(workbook) {
