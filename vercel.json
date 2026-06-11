@@ -1,7 +1,1 @@
-{
-  "functions": {
-    "api/gemini-recommendation.js": {
-      "runtime": "nodejs20.x"
-    }
-  }
-}
+{}
