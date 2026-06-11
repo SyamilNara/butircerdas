@@ -866,7 +866,7 @@ tr:last-child td {
 
 @media (max-width: 640px) {
   main {
-    width: min(100% - 20px, 1160px);
+    width: min(100% - 18px, 1160px);
   }
 
   .topbar {
@@ -886,20 +886,39 @@ tr:last-child td {
   .page-nav {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 5px;
   }
 
   .nav-btn {
     width: 100%;
+    min-height: 32px;
+    padding: 6px 9px;
     min-width: 0;
+    font-size: 0.86rem;
     white-space: normal;
   }
 
   .hero {
-    padding-top: 30px;
+    padding: 24px 0 14px;
+  }
+
+  .hero-visual {
+    display: none;
   }
 
   .hero h1 {
-    font-size: 3.1rem;
+    margin-bottom: 10px;
+    font-size: 2.48rem;
+    letter-spacing: -0.045em;
+  }
+
+  .lead {
+    font-size: 0.96rem;
+    line-height: 1.62;
+  }
+
+  .hero-actions {
+    margin-top: 18px;
   }
 
   .hero-actions,
@@ -913,6 +932,8 @@ tr:last-child td {
   .primary-btn,
   .secondary-btn {
     width: 100%;
+    min-height: 40px;
+    padding: 9px 13px;
   }
 
   .tool-overview,
@@ -933,15 +954,64 @@ tr:last-child td {
 
   .tool-card {
     min-height: auto;
+    padding: 14px;
+    border-radius: 16px;
+  }
+
+  .tool-card h2 {
+    margin-top: 14px;
+    font-size: 1rem;
+  }
+
+  .tool-card p {
+    font-size: 0.9rem;
   }
 
   .content-section,
   .panel {
-    padding: 15px;
+    padding: 14px;
+    border-radius: 16px;
   }
 
-  .visual-footer {
-    grid-template-columns: 1fr;
+  .content-section {
+    margin: 14px 0;
+  }
+
+  .section-title {
+    margin-bottom: 14px;
+  }
+
+  .section-title h2 {
+    font-size: 1.55rem;
+  }
+
+  .section-title p,
+  .guide-grid p,
+  .explain-box p,
+  .result-callout p {
+    font-size: 0.9rem;
+  }
+
+  .form-grid {
+    gap: 10px;
+  }
+
+  input {
+    min-height: 40px;
+  }
+
+  textarea {
+    min-height: 132px;
+  }
+
+  .dropzone {
+    min-height: 104px;
+    padding: 16px;
+  }
+
+  .metric-card {
+    min-height: 78px;
+    padding: 12px;
   }
 
   table {
