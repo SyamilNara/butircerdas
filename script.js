@@ -83,15 +83,13 @@ document.addEventListener("DOMContentLoaded", () => {
   els.exportPdfBtn.addEventListener("click", exportPdfReport);
   document.querySelectorAll("[data-target]").forEach((button) => {
     button.addEventListener("click", () => {
-      if (scrollToSection(button.dataset.target)) {
-        setActiveNav(button.dataset.target);
-      }
+      scrollToSection(button.dataset.target);
     });
   });
   document.querySelectorAll("[data-sample]").forEach((button) => {
     button.addEventListener("click", () => fillDataSample(button.dataset.sample));
   });
-  setupSectionObserver();
+  setActiveNav("inputSection");
 });
 
 function downloadTemplate() {
@@ -601,6 +599,7 @@ function scrollToSection(id) {
     return false;
   }
   document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  setActiveNav(id);
   return true;
 }
 
@@ -608,24 +607,6 @@ function setActiveNav(id) {
   document.querySelectorAll(".nav-btn").forEach((button) => {
     button.classList.toggle("active", button.dataset.target === id);
   });
-}
-
-function setupSectionObserver() {
-  if (!("IntersectionObserver" in window)) {
-    setActiveNav("inputSection");
-    return;
-  }
-  const sections = ["inputSection", "summarySection", "difficultySection", "discriminationSection", "validitySection", "reliabilitySection"]
-    .map((id) => document.getElementById(id))
-    .filter(Boolean);
-  const observer = new IntersectionObserver((entries) => {
-    const visible = entries
-      .filter((entry) => entry.isIntersecting)
-      .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
-    if (visible) setActiveNav(visible.target.id);
-  }, { rootMargin: "-20% 0px -65% 0px", threshold: [0.1, 0.35, 0.6] });
-  sections.forEach((section) => observer.observe(section));
-  setActiveNav("inputSection");
 }
 
 function setResultSections(enabled) {
