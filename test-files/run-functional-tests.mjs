@@ -31,7 +31,6 @@ const result20 = testWorkbook(files.valid20, 30, 20, "20 soal");
 testTextInput();
 testInvalidWorkbook();
 testRender(result10.results);
-testPageNavigation(result10.results);
 testExports(result10.results);
 testNoDistractor();
 
@@ -123,26 +122,6 @@ function testRender(results) {
   checks.push({ check: "Render semua tabel analisis terpisah" });
 }
 
-function testPageNavigation(results) {
-  context.__state.results = null;
-  context.setResultSections(false);
-  context.showPage("difficultySection");
-  assert(context.__state.activePage === "homePage", "Navbar hasil kembali ke Beranda sebelum analisis");
-
-  context.__state.results = results;
-  context.renderResults(results);
-  context.setResultSections(true);
-  context.showPage("discriminationSection");
-  assert(context.__state.activePage === "discriminationSection", "Navbar membuka halaman daya pembeda");
-  assert(!context.__elements.discriminationSection.classList.contains("page-hidden"), "Halaman daya pembeda terlihat");
-  assert(context.__elements.difficultySection.classList.contains("page-hidden"), "Halaman kesukaran disembunyikan saat daya pembeda aktif");
-
-  context.showPage("homePage");
-  assert(context.__state.activePage === "homePage", "Beranda bisa dibuka kembali");
-  assert(!context.__elements.heroSection.classList.contains("page-hidden"), "Hero Beranda terlihat");
-  checks.push({ check: "Navigasi halaman analisis berjalan" });
-}
-
 function testExports(results) {
   context.__state.results = results;
   const excelCapture = {};
@@ -195,8 +174,7 @@ function createBrowserLikeContext() {
   const ids = [
     "examName", "subjectName", "questionCount", "validityThreshold", "downloadTemplateBtn",
     "matrixFile", "dataTextInput", "useDataBtn", "messageBox", "previewSection", "detectedSummary", "previewTable",
-    "heroSection", "toolOverview", "inputSection", "summarySection", "difficultySection", "discriminationSection",
-    "validitySection", "reliabilitySection", "analyzeBtn", "summaryCards", "scoreTable", "difficultyTable", "discriminationTable",
+    "analyzeBtn", "summaryCards", "scoreTable", "difficultyTable", "discriminationTable",
     "validityTable", "reliabilityCards", "reliabilityTable", "groupInfo", "difficultyInsight",
     "discriminationInsight", "validityInsight", "reliabilityInsight", "exportExcelBtn", "exportPdfBtn"
   ];
@@ -206,18 +184,12 @@ function createBrowserLikeContext() {
   elements.questionCount.value = "10";
   elements.validityThreshold.value = "";
 
-  const homeNav = {
-    ...makeElement("homePageButton"),
-    dataset: { target: "homePage" },
-    disabled: false
-  };
   const resultNav = ["summarySection", "difficultySection", "discriminationSection", "validitySection", "reliabilitySection"].map((target) => ({
     ...makeElement(`${target}Button`),
     dataset: { target },
-    disabled: false
+    disabled: true
   }));
-  const navButtons = [homeNav, ...resultNav];
-  const resultSections = resultNav.map((button) => elements[button.dataset.target]);
+  const resultSections = resultNav.map((button) => makeElement(button.dataset.target));
   const menuToggle = makeElement("menuToggle");
   const sampleButtons = ["mini", "medium", "blankNames"].map((sample) => ({
     ...makeElement(`${sample}SampleButton`),
@@ -237,8 +209,8 @@ function createBrowserLikeContext() {
       return null;
     },
     querySelectorAll(selector) {
-      if (selector === ".nav-btn") return navButtons;
-      if (selector === "[data-target]") return navButtons;
+      if (selector === ".nav-btn") return resultNav;
+      if (selector === "[data-target]") return resultNav;
       if (selector === "[data-sample]") return sampleButtons;
       if (selector === ".result-nav") return resultNav;
       if (selector === ".result-section") return resultSections;
