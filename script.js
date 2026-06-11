@@ -40,8 +40,13 @@ Nama,S1,S2,S3,S4,S5,S6
 
 const state = {
   matrixData: null,
-  results: null
+  results: null,
+  activePage: "homePage"
 };
+
+const HOME_SECTIONS = ["heroSection", "toolOverview", "inputSection", "previewSection"];
+const RESULT_SECTIONS = ["summarySection", "difficultySection", "discriminationSection", "validitySection", "reliabilitySection"];
+const PAGE_SECTIONS = ["heroSection", "toolOverview", "inputSection", "previewSection", ...RESULT_SECTIONS];
 
 const els = {
   examName: document.getElementById("examName"),
@@ -95,7 +100,7 @@ document.addEventListener("DOMContentLoaded", () => {
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape") closeMobileMenu();
   });
-  setActiveNav("inputSection");
+  showPage("homePage", { scroll: false });
 });
 
 function downloadTemplate() {
@@ -140,13 +145,13 @@ function handleMatrixUpload(event) {
       state.results = null;
       setResultSections(false);
       renderPreview(parsed);
-      els.previewSection.classList.remove("hidden");
+      showPage("homePage", { scroll: false });
       showMessage("File berhasil dibaca. Periksa matriks, lalu klik Hitung Analisis.", "success");
     } catch (error) {
       state.matrixData = null;
       state.results = null;
       setResultSections(false);
-      els.previewSection.classList.add("hidden");
+      showPage("homePage", { scroll: false });
       showMessage(error.message, "error");
     }
   };
@@ -160,14 +165,14 @@ function handleTextData() {
     state.results = null;
     setResultSections(false);
     renderPreview(parsed);
-    els.previewSection.classList.remove("hidden");
+    showPage("homePage", { scroll: false });
     els.useDataBtn.classList.add("data-ready");
     showMessage("Data berhasil dibaca. Periksa preview, lalu klik Hitung Analisis.", "success");
   } catch (error) {
     state.matrixData = null;
     state.results = null;
     setResultSections(false);
-    els.previewSection.classList.add("hidden");
+    showPage("homePage", { scroll: false });
     els.useDataBtn.classList.remove("data-ready");
     showMessage(error.message, "error");
   }
@@ -257,7 +262,7 @@ function runAnalysis() {
   renderResults(results);
   setResultSections(true);
   showMessage("Analisis selesai. Hasil sudah dipisahkan berdasarkan jenis analisis.", "success");
-  scrollToSection("summarySection");
+  showPage("summarySection");
 }
 
 function analyzeMatrix(data) {
@@ -597,15 +602,37 @@ function addPdfTable(doc, title, rows, startY = null) {
 }
 
 function scrollToSection(id) {
-  const resultIds = ["summarySection", "difficultySection", "discriminationSection", "validitySection", "reliabilitySection"];
-  if (resultIds.includes(id) && !state.results) {
+  if (id === "inputSection") return showPage("homePage", { focusId: "inputSection" });
+  if (id === "toolOverview") return showPage("homePage", { focusId: "toolOverview" });
+  return showPage(id);
+}
+
+function showPage(id, options = {}) {
+  const pageId = id === "homePage" ? "homePage" : id;
+  const scroll = options.scroll !== false;
+  const focusId = options.focusId || (pageId === "homePage" ? "heroSection" : pageId);
+
+  if (RESULT_SECTIONS.includes(pageId) && !state.results) {
     showMessage("Masukkan data matriks dan klik Hitung Analisis terlebih dahulu.", "error");
-    document.getElementById("inputSection")?.scrollIntoView({ behavior: "smooth", block: "start" });
-    setActiveNav("inputSection");
+    showPage("homePage", { focusId: "inputSection" });
     return false;
   }
-  document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
-  setActiveNav(id);
+
+  PAGE_SECTIONS.forEach((sectionId) => {
+    const section = document.getElementById(sectionId);
+    if (!section) return;
+    const visible = pageId === "homePage"
+      ? HOME_SECTIONS.includes(sectionId) && (sectionId !== "previewSection" || Boolean(state.matrixData))
+      : sectionId === pageId;
+    section.classList.toggle("page-hidden", !visible);
+    section.classList.toggle("hidden", !visible && (sectionId === "previewSection" || RESULT_SECTIONS.includes(sectionId)));
+  });
+
+  state.activePage = pageId;
+  setActiveNav(pageId);
+  if (scroll) {
+    document.getElementById(focusId)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
   return true;
 }
 
@@ -631,9 +658,7 @@ function setResultSections(enabled) {
   document.querySelectorAll(".result-section").forEach((section) => {
     section.classList.toggle("hidden", !enabled);
   });
-  document.querySelectorAll(".result-nav").forEach((button) => {
-    button.disabled = !enabled;
-  });
+  if (!enabled) showPage("homePage", { scroll: false });
 }
 
 function parseItemNumber(value) {
