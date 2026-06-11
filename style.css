@@ -112,6 +112,17 @@ select {
   color: var(--teal-dark);
 }
 
+.tab-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
+.tab-btn:disabled:hover {
+  border-color: transparent;
+  background: transparent;
+  color: #31403d;
+}
+
 main {
   width: min(1160px, calc(100% - 32px));
   margin: 0 auto;
@@ -436,23 +447,31 @@ table {
   width: 100%;
   min-width: 880px;
   border-collapse: collapse;
+  table-layout: auto;
 }
 
 th,
 td {
-  padding: 11px 12px;
+  padding: 12px 14px;
   border-bottom: 1px solid var(--line);
   text-align: left;
   vertical-align: top;
   font-size: 0.92rem;
+  line-height: 1.35;
 }
 
 th {
-  position: sticky;
-  top: 70px;
   background: #edf4f2;
   color: #213330;
   font-weight: 900;
+}
+
+thead {
+  display: table-header-group;
+}
+
+tbody {
+  display: table-row-group;
 }
 
 tr:last-child td {

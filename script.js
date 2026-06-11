@@ -33,6 +33,7 @@ const els = {
 };
 
 document.addEventListener("DOMContentLoaded", () => {
+  setResultTabsEnabled(false);
   els.downloadTemplateBtn.addEventListener("click", downloadTemplate);
   els.excelFile.addEventListener("change", handleExcelUpload);
   els.analyzeBtn.addEventListener("click", runAnalysis);
@@ -607,6 +608,12 @@ function exportPdfReport() {
 function activateTab(tabName) {
   const targetButton = document.querySelector(`.tab-btn[data-tab="${tabName}"]`);
   if (targetButton?.disabled) return;
+  const resultTabs = ["summary", "scores", "items", "charts", "recommendations"];
+  if (resultTabs.includes(tabName) && !state.results) {
+    showMessage("Upload file Excel dan klik Hitung Analisis terlebih dahulu.", "error");
+    document.getElementById("templateTab")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    return;
+  }
   document.querySelectorAll(".tab-btn").forEach((button) => button.classList.toggle("active", button.dataset.tab === tabName));
   const target = document.getElementById(`${tabName}Tab`);
   if (target) {
