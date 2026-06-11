@@ -11,173 +11,240 @@
   <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
 </head>
 <body>
-  <header class="app-header">
-    <div>
-      <p class="eyebrow">ButirCerdas</p>
-      <h1>Analisis Butir Soal Otomatis</h1>
-      <p class="lead">Buat template Excel, unggah jawaban peserta, lalu hitung skor, kesukaran, daya pembeda, validitas, reliabilitas, distraktor, dan rekomendasi langsung di browser.</p>
-    </div>
-    <div class="header-badge">
-      <span>Tanpa login</span>
-      <span>Tanpa database</span>
-      <span>Siap Vercel</span>
-    </div>
+  <header class="topbar">
+    <a class="brand" href="#top" aria-label="ButirCerdas">
+      <span class="brand-mark">B</span>
+      <span>
+        <strong>ButirCerdas</strong>
+        <small>Analisis Butir Soal</small>
+      </span>
+    </a>
+    <nav class="page-nav" aria-label="Navigasi halaman">
+      <button class="tab-btn active" type="button" data-tab="template">Input</button>
+      <button class="tab-btn" type="button" data-tab="summary">Ringkasan</button>
+      <button class="tab-btn" type="button" data-tab="items">Butir Soal</button>
+      <button class="tab-btn" type="button" data-tab="charts">Grafik</button>
+      <button class="tab-btn" type="button" data-tab="recommendations">Rekomendasi</button>
+    </nav>
   </header>
 
-  <main class="shell">
-    <div class="tabs app-tabs" role="tablist" aria-label="Navigasi ButirCerdas">
-      <button class="tab-btn active" type="button" data-tab="template">Template</button>
-      <button class="tab-btn" type="button" data-tab="upload">Upload</button>
-      <button class="tab-btn result-tab" type="button" data-tab="summary" disabled>Ringkasan</button>
-      <button class="tab-btn result-tab" type="button" data-tab="scores" disabled>Nilai Peserta</button>
-      <button class="tab-btn result-tab" type="button" data-tab="items" disabled>Analisis Butir</button>
-      <button class="tab-btn result-tab" type="button" data-tab="charts" disabled>Grafik</button>
-      <button class="tab-btn result-tab" type="button" data-tab="recommendations" disabled>Rekomendasi</button>
-    </div>
-
-    <section id="templateTab" class="tab-panel panel template-panel">
-      <div class="section-heading">
-        <div>
-          <p class="section-kicker">Langkah 1</p>
-          <h2>Buat Template Excel</h2>
+  <main id="top">
+    <section class="hero">
+      <div class="hero-copy">
+        <p class="eyebrow">Tanpa login • Tanpa database • Siap hosting</p>
+        <h1>Analisis butir soal dari Excel, langsung jadi laporan.</h1>
+        <p class="lead">ButirCerdas membaca jawaban peserta dan kunci dari template Excel, lalu menghitung skor, tingkat kesukaran, daya pembeda, validitas, reliabilitas KR-20, distraktor, dan rekomendasi.</p>
+        <div class="hero-actions">
+          <button class="primary-btn tab-btn" type="button" data-tab="template">Mulai Analisis</button>
+          <button class="secondary-btn tab-btn" type="button" data-tab="guide">Lihat Pedoman</button>
         </div>
       </div>
-      <div class="form-grid">
-        <label>
-          Nama ujian
-          <input id="examName" type="text" value="Ujian Contoh" placeholder="Misal: Ulangan Harian 1" />
-        </label>
-        <label>
-          Mata pelajaran
-          <input id="subjectName" type="text" value="Matematika" placeholder="Misal: Matematika" />
-        </label>
-        <label>
-          Jumlah soal
-          <input id="questionCount" type="number" min="1" max="200" value="20" />
-        </label>
-        <label>
-          Pilihan jawaban
-          <select id="optionSet">
-            <option value="ABCD">A-D</option>
-            <option value="ABCDE" selected>A-E</option>
-          </select>
-        </label>
+      <div class="hero-stats" aria-label="Fitur utama">
+        <div><strong>Excel</strong><span>Template otomatis</span></div>
+        <div><strong>KR-20</strong><span>Reliabilitas tes</span></div>
+        <div><strong>AI</strong><span>Narasi opsional</span></div>
       </div>
-      <button id="downloadTemplateBtn" class="primary-btn" type="button">Download Template Excel</button>
     </section>
 
-    <section id="uploadTab" class="tab-panel hidden">
-      <div class="panel upload-panel">
-        <div class="section-heading">
-          <div>
-            <p class="section-kicker">Langkah 2</p>
-            <h2>Upload Excel Yang Sudah Diisi</h2>
-          </div>
-        </div>
-        <label class="dropzone" for="excelFile">
-          <span>Pilih file .xlsx dari template ButirCerdas</span>
-          <small>Sheet wajib: Jawaban dan Kunci</small>
-          <input id="excelFile" type="file" accept=".xlsx,.xls" />
-        </label>
-        <div id="messageBox" class="message-box" role="status" aria-live="polite"></div>
+    <section id="templateTab" class="workspace-section">
+      <div class="section-title">
+        <span>Input Data</span>
+        <h2>Siapkan template, isi jawaban, lalu upload kembali</h2>
       </div>
 
-      <section id="previewSection" class="panel hidden">
-        <div class="section-heading">
-          <div>
-            <p class="section-kicker">Preview</p>
-            <h2>Data Terdeteksi</h2>
+      <div class="workspace-grid">
+        <section class="panel step-card">
+          <div class="step-number">1</div>
+          <div class="section-heading">
+            <div>
+              <p class="section-kicker">Template Excel</p>
+              <h3>Buat format jawaban</h3>
+            </div>
           </div>
-          <button id="analyzeBtn" class="primary-btn" type="button">Analisis Sekarang</button>
-        </div>
-        <div id="detectedSummary" class="metric-grid"></div>
-        <div class="table-wrap">
-          <table id="previewTable"></table>
-        </div>
-      </section>
+          <div class="form-grid">
+            <label>
+              Nama ujian
+              <input id="examName" type="text" value="Ujian Contoh" placeholder="Misal: Ulangan Harian 1" />
+            </label>
+            <label>
+              Mata pelajaran
+              <input id="subjectName" type="text" value="Matematika" placeholder="Misal: Matematika" />
+            </label>
+            <label>
+              Jumlah soal
+              <input id="questionCount" type="number" min="1" max="200" value="20" />
+            </label>
+            <label>
+              Pilihan jawaban
+              <select id="optionSet">
+                <option value="ABCD">A-D</option>
+                <option value="ABCDE" selected>A-E</option>
+              </select>
+            </label>
+            <label>
+              R tabel validitas
+              <input id="validityThreshold" type="number" min="0" max="1" step="0.01" placeholder="Opsional, misal 0.36" />
+            </label>
+          </div>
+          <button id="downloadTemplateBtn" class="primary-btn" type="button">Download Template Excel</button>
+        </section>
+
+        <section id="uploadTab" class="panel step-card">
+          <div class="step-number">2</div>
+          <div class="section-heading">
+            <div>
+              <p class="section-kicker">Upload Data</p>
+              <h3>Masukkan file yang sudah diisi</h3>
+            </div>
+          </div>
+          <label class="dropzone" for="excelFile">
+            <span>Pilih file .xlsx</span>
+            <small>Sheet wajib: Jawaban dan Kunci</small>
+            <input id="excelFile" type="file" accept=".xlsx,.xls" />
+          </label>
+          <div id="messageBox" class="message-box" role="status" aria-live="polite"></div>
+        </section>
+      </div>
     </section>
 
-    <section id="summaryTab" class="tab-panel panel hidden">
-      <div class="section-heading">
+    <section id="previewSection" class="content-section hidden">
+      <div class="section-title inline-title">
         <div>
-          <p class="section-kicker">Hasil</p>
-          <h2>Ringkasan Analisis</h2>
+          <span>Preview</span>
+          <h2>Data terdeteksi</h2>
+        </div>
+        <button id="analyzeBtn" class="primary-btn" type="button">Hitung Analisis</button>
+      </div>
+      <div id="detectedSummary" class="metric-grid"></div>
+      <div class="table-wrap">
+        <table id="previewTable"></table>
+      </div>
+    </section>
+
+    <section id="summaryTab" class="content-section result-panel hidden">
+      <div class="section-title inline-title">
+        <div>
+          <span>Hasil</span>
+          <h2>Ringkasan analisis</h2>
         </div>
         <div class="button-row">
           <button id="exportExcelBtn" class="secondary-btn" type="button">Export Excel</button>
           <button id="exportPdfBtn" class="secondary-btn" type="button">Export PDF</button>
         </div>
       </div>
-
       <div id="summaryCards" class="metric-grid"></div>
     </section>
 
-      <section id="scoresTab" class="tab-panel panel hidden">
-        <div class="section-heading">
-          <div>
-            <p class="section-kicker">Tabel</p>
-            <h2>Nilai Peserta</h2>
-          </div>
+    <section id="chartsTab" class="content-section result-panel hidden">
+      <div class="section-title">
+        <span>Visual</span>
+        <h2>Grafik hasil analisis</h2>
+      </div>
+      <div class="chart-grid">
+        <div class="chart-box">
+          <h3>Distribusi Nilai</h3>
+          <canvas id="scoreChart"></canvas>
         </div>
-        <div class="table-wrap">
-          <table id="studentScoreTable"></table>
+        <div class="chart-box">
+          <h3>Kategori Kesukaran</h3>
+          <canvas id="difficultyChart"></canvas>
         </div>
-      </section>
+        <div class="chart-box">
+          <h3>Rekomendasi Soal</h3>
+          <canvas id="recommendationChart"></canvas>
+        </div>
+        <div class="chart-box">
+          <h3>Reliabilitas Tes</h3>
+          <canvas id="reliabilityChart"></canvas>
+        </div>
+      </div>
+    </section>
 
-      <section id="itemsTab" class="tab-panel panel hidden">
-        <div class="section-heading">
-          <div>
-            <p class="section-kicker">Tabel</p>
-            <h2>Analisis Butir Soal</h2>
-          </div>
-        </div>
-        <div class="table-wrap">
-          <table id="itemAnalysisTable"></table>
-        </div>
-      </section>
+    <section id="itemsTab" class="content-section result-panel hidden">
+      <div class="section-title">
+        <span>Tabel</span>
+        <h2>Analisis butir soal</h2>
+      </div>
+      <p class="table-note">Geser tabel ke samping jika layar kecil.</p>
+      <div class="table-wrap">
+        <table id="itemAnalysisTable"></table>
+      </div>
+    </section>
 
-      <section id="chartsTab" class="tab-panel panel hidden">
-        <div class="section-heading">
-          <div>
-            <p class="section-kicker">Visual</p>
-            <h2>Grafik Hasil</h2>
-          </div>
-        </div>
-        <div class="chart-grid">
-          <div class="chart-box">
-            <h3>Distribusi Nilai</h3>
-            <canvas id="scoreChart"></canvas>
-          </div>
-          <div class="chart-box">
-            <h3>Kategori Kesukaran</h3>
-            <canvas id="difficultyChart"></canvas>
-          </div>
-          <div class="chart-box">
-            <h3>Rekomendasi Soal</h3>
-            <canvas id="recommendationChart"></canvas>
-          </div>
-          <div class="chart-box">
-            <h3>Reliabilitas Tes</h3>
-            <canvas id="reliabilityChart"></canvas>
-          </div>
-        </div>
-      </section>
+    <section id="scoresTab" class="content-section result-panel hidden">
+      <div class="section-title">
+        <span>Tabel</span>
+        <h2>Skor peserta</h2>
+      </div>
+      <p class="table-note">Skor dihitung dari jawaban benar = 1 dan salah/kosong = 0.</p>
+      <div class="table-wrap">
+        <table id="studentScoreTable"></table>
+      </div>
+    </section>
 
-      <section id="recommendationsTab" class="tab-panel panel hidden">
-        <div class="section-heading">
-          <div>
-            <p class="section-kicker">Rekomendasi</p>
-            <h2>Kesimpulan Otomatis</h2>
-          </div>
-          <button id="aiRecommendationBtn" class="secondary-btn" type="button">Buat Rekomendasi AI</button>
+    <section id="recommendationsTab" class="content-section result-panel hidden">
+      <div class="section-title inline-title">
+        <div>
+          <span>Rekomendasi</span>
+          <h2>Kesimpulan dan tindak lanjut</h2>
         </div>
-        <div id="ruleRecommendation" class="recommendation-box"></div>
-        <div id="aiRecommendation" class="recommendation-box muted"></div>
-      </section>
+        <button id="aiRecommendationBtn" class="secondary-btn" type="button">Buat Rekomendasi AI</button>
+      </div>
+      <div id="ruleRecommendation" class="recommendation-box"></div>
+      <div id="aiRecommendation" class="recommendation-box muted"></div>
+    </section>
+
+    <section id="guideTab" class="content-section guide-section">
+      <div class="section-title">
+        <span>Pedoman</span>
+        <h2>Interpretasi hasil analisis</h2>
+      </div>
+      <div class="guide-grid">
+        <article>
+          <h3>Tingkat Kesukaran</h3>
+          <p>P = jumlah peserta benar / jumlah peserta.</p>
+          <ul>
+            <li>0.00 - 0.30 = Sukar</li>
+            <li>0.31 - 0.70 = Sedang</li>
+            <li>0.71 - 1.00 = Mudah</li>
+          </ul>
+        </article>
+        <article>
+          <h3>Daya Pembeda</h3>
+          <p>D = proporsi benar kelompok atas - kelompok bawah.</p>
+          <ul>
+            <li>&lt; 0.00 = Buruk</li>
+            <li>0.00 - 0.19 = Jelek</li>
+            <li>0.20 - 0.39 = Cukup</li>
+            <li>0.40 - 0.69 = Baik</li>
+            <li>≥ 0.70 = Sangat Baik</li>
+          </ul>
+        </article>
+        <article>
+          <h3>Validitas</h3>
+          <p>Menggunakan corrected item-total correlation.</p>
+          <ul>
+            <li>Jika R tabel diisi, valid bila r hitung ≥ R tabel</li>
+            <li>Jika kosong, kategori memakai kekuatan korelasi</li>
+          </ul>
+        </article>
+        <article>
+          <h3>Reliabilitas</h3>
+          <p>KR-20 = k/(k-1) × (1 - Σpq / Var total).</p>
+          <ul>
+            <li>&lt; 0.20 = Sangat Rendah</li>
+            <li>0.20 - 0.39 = Rendah</li>
+            <li>0.40 - 0.59 = Cukup</li>
+            <li>0.60 - 0.79 = Tinggi</li>
+            <li>≥ 0.80 = Sangat Tinggi</li>
+          </ul>
+        </article>
+      </div>
+    </section>
   </main>
 
   <footer class="app-footer">
-    <p>ButirCerdas memproses Excel di browser. Data tidak disimpan permanen dan tidak membutuhkan login.</p>
+    <p>ButirCerdas © 2026 • Analisis diproses di browser, tanpa login dan tanpa penyimpanan permanen.</p>
   </footer>
 
   <script src="script.js"></script>

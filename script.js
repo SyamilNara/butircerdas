@@ -14,6 +14,7 @@ const els = {
   subjectName: document.getElementById("subjectName"),
   questionCount: document.getElementById("questionCount"),
   optionSet: document.getElementById("optionSet"),
+  validityThreshold: document.getElementById("validityThreshold"),
   downloadTemplateBtn: document.getElementById("downloadTemplateBtn"),
   excelFile: document.getElementById("excelFile"),
   messageBox: document.getElementById("messageBox"),
@@ -269,6 +270,7 @@ function runAnalysis() {
   state.results = results;
   renderResults(results);
   setResultTabsEnabled(true);
+  renderCharts(results);
   activateTab("summary");
   showMessage("Analisis selesai. Hasil sudah ditampilkan.", "success");
 }
@@ -295,7 +297,8 @@ function analyzeData(data) {
   });
 
   const totalScores = scoredStudents.map((student) => student.correct);
-  const totalVariance = sampleVariance(totalScores);
+  const totalVariance = populationVariance(totalScores);
+  const validityThreshold = parseOptionalThreshold(els.validityThreshold?.value);
   const sorted = [...scoredStudents].sort((a, b) => b.correct - a.correct || a.rankSeed - b.rankSeed);
   const groupSize = Math.max(1, Math.round(scoredStudents.length * 0.27));
   const upper = sorted.slice(0, groupSize);
@@ -311,6 +314,7 @@ function analyzeData(data) {
     const itemVector = scoredStudents.map((student) => student.itemScores[number]);
     const correctedTotals = scoredStudents.map((student) => student.correct - student.itemScores[number]);
     const validityValue = pearson(itemVector, correctedTotals);
+    const validity = categorizeValidity(validityValue, validityThreshold);
     const distribution = {};
     data.optionList.forEach((option) => {
       distribution[option] = scoredStudents.filter((student) => student.answers[number] === option).length;
@@ -318,11 +322,10 @@ function analyzeData(data) {
     const ineffectiveDistractors = data.optionList.filter((option) => option !== data.keys[number] && distribution[option] === 0);
     const difficultyCategory = categorizeDifficulty(difficultyValue);
     const discriminationCategory = categorizeDiscrimination(discriminationValue);
-    const validityCategory = categorizeValidity(validityValue);
     const recommendation = makeRecommendation({
       difficultyCategory,
       discriminationCategory,
-      validityCategory,
+      validityStatus: validity.status,
       ineffectiveDistractors
     });
 
@@ -336,7 +339,8 @@ function analyzeData(data) {
       discriminationValue,
       discriminationCategory,
       validityValue,
-      validityCategory,
+      validityCategory: validity.category,
+      validityStatus: validity.status,
       distribution,
       ineffectiveDistractors,
       recommendation
@@ -356,7 +360,8 @@ function analyzeData(data) {
       subject: data.subject,
       optionList: data.optionList,
       questionCount: k,
-      studentCount: scoredStudents.length
+      studentCount: scoredStudents.length,
+      validityThreshold
     },
     students: scoredStudents,
     items: itemAnalyses,
@@ -401,7 +406,7 @@ function renderResults(results) {
       item.wrongCount,
       `${round(item.difficultyValue, 3)} (${item.difficultyCategory})`,
       `${round(item.discriminationValue, 3)} (${item.discriminationCategory})`,
-      `${round(item.validityValue, 3)} (${item.validityCategory})`,
+      validityDisplay(item, results.meta.validityThreshold),
       distractorSummary(item, results.meta.optionList),
       item.recommendation.label
     ])
@@ -482,6 +487,7 @@ async function generateAiRecommendation() {
           difficulty: item.difficultyCategory,
           discrimination: item.discriminationCategory,
           validity: item.validityCategory,
+          validityStatus: item.validityStatus,
           distractors: item.ineffectiveDistractors,
           recommendation: item.recommendation.label
         }))
@@ -528,7 +534,7 @@ function exportExcelReport() {
       item.wrongCount,
       `${round(item.difficultyValue, 3)} (${item.difficultyCategory})`,
       `${round(item.discriminationValue, 3)} (${item.discriminationCategory})`,
-      `${round(item.validityValue, 3)} (${item.validityCategory})`,
+      validityDisplay(item, results.meta.validityThreshold),
       distractorSummary(item, results.meta.optionList),
       item.recommendation.label,
       item.recommendation.reason
@@ -571,7 +577,7 @@ function exportPdfReport() {
       item.wrongCount,
       `${round(item.difficultyValue, 3)} (${item.difficultyCategory})`,
       `${round(item.discriminationValue, 3)} (${item.discriminationCategory})`,
-      `${round(item.validityValue, 3)} (${item.validityCategory})`,
+      validityDisplay(item, results.meta.validityThreshold),
       distractorSummary(item, results.meta.optionList),
       item.recommendation.label
     ]),
@@ -602,8 +608,11 @@ function activateTab(tabName) {
   const targetButton = document.querySelector(`.tab-btn[data-tab="${tabName}"]`);
   if (targetButton?.disabled) return;
   document.querySelectorAll(".tab-btn").forEach((button) => button.classList.toggle("active", button.dataset.tab === tabName));
-  document.querySelectorAll(".tab-panel").forEach((panel) => panel.classList.add("hidden"));
-  document.getElementById(`${tabName}Tab`).classList.remove("hidden");
+  const target = document.getElementById(`${tabName}Tab`);
+  if (target) {
+    target.classList.remove("hidden");
+    target.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
   if (tabName === "charts" && state.results) {
     renderCharts(state.results);
   }
@@ -613,21 +622,19 @@ function setResultTabsEnabled(enabled) {
   document.querySelectorAll(".result-tab").forEach((button) => {
     button.disabled = !enabled;
   });
-  if (!enabled) {
-    ["summary", "scores", "items", "charts", "recommendations"].forEach((tabName) => {
-      document.getElementById(`${tabName}Tab`)?.classList.add("hidden");
-    });
-  }
+  ["summary", "scores", "items", "charts", "recommendations"].forEach((tabName) => {
+    document.getElementById(`${tabName}Tab`)?.classList.toggle("hidden", !enabled);
+  });
 }
 
-function makeRecommendation({ difficultyCategory, discriminationCategory, validityCategory, ineffectiveDistractors }) {
+function makeRecommendation({ difficultyCategory, discriminationCategory, validityStatus, ineffectiveDistractors }) {
   const isIdeal =
     difficultyCategory === "Sedang" &&
     ["Baik", "Sangat Baik"].includes(discriminationCategory) &&
-    validityCategory === "Valid";
-  const difficultyProblem = difficultyCategory === "Mudah" || difficultyCategory === "Sulit";
-  const discriminationProblem = discriminationCategory === "Kurang";
-  const validityProblem = validityCategory === "Tidak Valid";
+    validityStatus === "Valid";
+  const difficultyProblem = difficultyCategory === "Mudah" || difficultyCategory === "Sukar";
+  const discriminationProblem = ["Buruk", "Jelek"].includes(discriminationCategory);
+  const validityProblem = validityStatus === "Tidak Valid";
   const distractorProblem = ineffectiveDistractors.length > 0;
   const badIndicatorCount = [difficultyProblem, discriminationProblem, validityProblem, distractorProblem].filter(Boolean).length;
 
@@ -648,6 +655,13 @@ function makeRecommendation({ difficultyCategory, discriminationCategory, validi
   };
 }
 
+function validityDisplay(item, threshold) {
+  if (threshold !== null) {
+    return `${round(item.validityValue, 3)} (${item.validityStatus}; r tabel ${threshold})`;
+  }
+  return `${round(item.validityValue, 3)} (${item.validityCategory})`;
+}
+
 function distractorSummary(item, optionList) {
   const counts = optionList.map((option) => `${option}: ${item.distribution[option] || 0}`).join(", ");
   const status = item.ineffectiveDistractors.length
@@ -658,28 +672,37 @@ function distractorSummary(item, optionList) {
 
 function categorizeDifficulty(value) {
   if (value > 0.7) return "Mudah";
-  if (value < 0.3) return "Sulit";
+  if (value <= 0.3) return "Sukar";
   return "Sedang";
 }
 
 function categorizeDiscrimination(value) {
-  if (value >= 0.4) return "Sangat Baik";
-  if (value >= 0.3) return "Baik";
+  if (value < 0) return "Buruk";
+  if (value < 0.2) return "Jelek";
+  if (value >= 0.7) return "Sangat Baik";
+  if (value >= 0.4) return "Baik";
   if (value >= 0.2) return "Cukup";
-  return "Kurang";
+  return "Jelek";
 }
 
-function categorizeValidity(value) {
-  if (value >= 0.4) return "Valid";
-  if (value >= 0.2) return "Cukup";
-  return "Tidak Valid";
+function categorizeValidity(value, threshold) {
+  if (threshold !== null) {
+    return {
+      category: value >= threshold ? "Valid" : "Tidak Valid",
+      status: value >= threshold ? "Valid" : "Tidak Valid"
+    };
+  }
+  if (value >= 0.4) return { category: "Tinggi", status: "Valid" };
+  if (value >= 0.2) return { category: "Cukup", status: "Cukup" };
+  return { category: "Rendah", status: "Tidak Valid" };
 }
 
 function categorizeReliability(value) {
-  if (value >= 0.9) return "Sangat Tinggi";
-  if (value >= 0.7) return "Tinggi";
-  if (value >= 0.5) return "Sedang";
-  return "Rendah";
+  if (value >= 0.8) return "Sangat Tinggi";
+  if (value >= 0.6) return "Tinggi";
+  if (value >= 0.4) return "Cukup";
+  if (value >= 0.2) return "Rendah";
+  return "Sangat Rendah";
 }
 
 function pearson(x, y) {
@@ -699,10 +722,16 @@ function pearson(x, y) {
   return denominator === 0 ? 0 : numerator / denominator;
 }
 
-function sampleVariance(values) {
-  if (values.length < 2) return 0;
+function populationVariance(values) {
+  if (values.length < 1) return 0;
   const avg = average(values);
-  return values.reduce((sum, value) => sum + ((value - avg) ** 2), 0) / (values.length - 1);
+  return values.reduce((sum, value) => sum + ((value - avg) ** 2), 0) / values.length;
+}
+
+function parseOptionalThreshold(value) {
+  const number = Number(value);
+  if (!Number.isFinite(number) || number <= 0) return null;
+  return Math.min(1, Math.max(0, round(number, 3)));
 }
 
 function average(values) {

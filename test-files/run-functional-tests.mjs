@@ -262,6 +262,7 @@ function makeElement(id) {
     dataset: {},
     classList: makeClassList(),
     addEventListener() {},
+    scrollIntoView() {},
     querySelectorAll() { return []; },
     waitFor() {}
   };
