@@ -157,12 +157,14 @@ function handleTextData() {
     setResultSections(false);
     renderPreview(parsed);
     els.previewSection.classList.remove("hidden");
+    els.useDataBtn.classList.add("data-ready");
     showMessage("Data berhasil dibaca. Periksa preview, lalu klik Hitung Analisis.", "success");
   } catch (error) {
     state.matrixData = null;
     state.results = null;
     setResultSections(false);
     els.previewSection.classList.add("hidden");
+    els.useDataBtn.classList.remove("data-ready");
     showMessage(error.message, "error");
   }
 }
@@ -171,8 +173,9 @@ function fillDataSample(sampleKey) {
   const sample = DATA_SAMPLES[sampleKey] || DATA_SAMPLES.medium;
   els.dataTextInput.value = sample.trim();
   document.querySelectorAll("[data-sample]").forEach((button) => {
-    button.classList.toggle("active", button.dataset.sample === sampleKey);
+    button.classList.remove("active");
   });
+  els.useDataBtn.classList.remove("data-ready");
   showMessage("Contoh data sudah dimasukkan. Klik Gunakan Data untuk membaca data.", "success");
 }
 

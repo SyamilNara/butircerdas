@@ -620,10 +620,22 @@ textarea:focus {
   background: var(--teal-soft);
 }
 
-.sample-btn.active {
+.sample-btn.active,
+.secondary-btn.data-ready {
   border-color: var(--teal);
   background: var(--teal);
+  background-color: var(--teal);
+  background-image: none;
   color: #fff;
+}
+
+#useDataBtn.data-ready {
+  border-color: var(--teal);
+  background: var(--teal);
+  background-color: var(--teal);
+  background-image: none;
+  color: #fff;
+  transition: none;
 }
 
 .message-box {
