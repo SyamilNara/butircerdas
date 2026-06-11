@@ -252,12 +252,12 @@ function renderPreview(data) {
     metricCard("Pilihan", data.optionList.join("/"))
   ].join("");
 
-  const headers = ["No", "Nama", "Kelas", ...data.questionNumbers.slice(0, 10).map(String)];
+  const headers = ["No", "Nama", "Kelas", ...data.questionNumbers.map(String)];
   const rows = data.students.slice(0, 5).map((student, index) => [
     student.no || index + 1,
     student.name,
     student.className,
-    ...data.questionNumbers.slice(0, 10).map((number) => student.answers[number] || "")
+    ...data.questionNumbers.map((number) => student.answers[number] || "")
   ]);
   els.previewTable.innerHTML = tableHtml(headers, rows);
 }

@@ -70,6 +70,8 @@ function testWorkbook(filePath, expectedStudents, expectedQuestions, label) {
   assert(results.items.every((item) => item.difficultyCategory && item.discriminationCategory && item.validityCategory), `Kesukaran, daya pembeda, validitas ${label} muncul`);
   assert(Number.isFinite(results.summary.reliability), `Reliabilitas KR-20 ${label} muncul`);
   assert(results.items.every((item) => item.distribution && item.recommendation?.label), `Distraktor dan rekomendasi ${label} muncul`);
+  context.renderPreview(parsed);
+  assert(context.__elements.previewTable.innerHTML.includes(`<th>${expectedQuestions}</th>`), `Preview ${label} menampilkan kolom soal terakhir`);
 
   checks.push({
     check: `Upload/parsing dan analisis ${label}`,
