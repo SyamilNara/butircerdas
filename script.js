@@ -480,13 +480,19 @@ function renderResults(results) {
     metricCard("Kategori", results.reliability.category)
   ].join("");
   els.reliabilityTable.innerHTML = tableHtml(
-    ["No Soal", "p", "q = 1-p", "p × q"],
+    ["Komponen", "p", "q = 1-p", "Nilai / Hasil"],
     results.reliability.items.map((item) => [
       `S${item.item}`,
       round(item.p, 3),
       round(item.q, 3),
       round(item.pq, 3)
-    ]).concat([["Rumus KR-20", "", "", results.reliability.formula]])
+    ]).concat([
+      ["Σpq", "", "", round(results.reliability.pqSum, 3)],
+      ["Varians Total (s²)", "", "", round(results.reliability.totalVariance, 3)],
+      ["Rumus KR-20", "", "", results.reliability.formula],
+      ["Koefisien KR-20", "", "", results.reliability.kr20],
+      ["Kategori Reliabilitas", "", "", results.reliability.category]
+    ])
   );
   els.reliabilityInsight.innerHTML = buildReliabilityInsight(results.reliability);
 }

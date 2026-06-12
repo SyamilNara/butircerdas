@@ -123,6 +123,8 @@ function testRender(results) {
   assert(context.__elements.discriminationTable.innerHTML.includes("Perhitungan D"), "Tabel daya pembeda punya perhitungan");
   assert(context.__elements.validityTable.innerHTML.includes("ΣXY"), "Tabel validitas punya komponen hitung");
   assert(context.__elements.reliabilityTable.innerHTML.includes("Rumus KR-20"), "Tabel reliabilitas punya rumus");
+  assert(context.__elements.reliabilityTable.innerHTML.includes("Koefisien KR-20"), "Tabel reliabilitas menampilkan koefisien KR-20");
+  assert(context.__elements.reliabilityTable.innerHTML.includes("Kategori Reliabilitas"), "Tabel reliabilitas menampilkan kategori");
   checks.push({ check: "Render semua tabel analisis terpisah" });
 }
 
@@ -185,7 +187,7 @@ function testExports(results) {
   assert(pdfCapture.tables.some((table) => table.includes("Perhitungan P")), "PDF berisi kesukaran");
   assert(pdfCapture.tables.some((table) => table.includes("Perhitungan D")), "PDF berisi daya pembeda");
   assert(pdfCapture.tables.some((table) => table.includes("ΣXY")), "PDF berisi validitas");
-  assert(pdfCapture.tables.some((table) => table.includes("p × q")), "PDF berisi reliabilitas");
+  assert(pdfCapture.tables.some((table) => table.includes("Nilai / Hasil")), "PDF berisi reliabilitas");
   checks.push({ check: "Export Excel/PDF analisis terpisah" });
 }
 
