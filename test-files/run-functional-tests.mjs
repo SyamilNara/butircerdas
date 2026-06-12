@@ -32,6 +32,7 @@ testTextInput();
 testInvalidWorkbook();
 testRender(result10.results);
 testAiRecommendationPayload(result10.results);
+testAnalysisRules();
 testExports(result10.results);
 testNoDistractor();
 
@@ -130,6 +131,25 @@ function testAiRecommendationPayload(results) {
   assert(payload.itemCategoryCounts.difficulty.Sedang >= 0, "Payload AI membawa ringkasan kategori");
   assert(!JSON.stringify(payload).toLowerCase().includes("distraktor"), "Payload AI tidak membawa distraktor");
   checks.push({ check: "Payload rekomendasi AI sesuai analisis matriks" });
+}
+
+function testAnalysisRules() {
+  assert(context.categorizeDifficulty(0.29) === "Sukar", "P < 0.30 = Sukar");
+  assert(context.categorizeDifficulty(0.3) === "Sedang", "P = 0.30 = Sedang");
+  assert(context.categorizeDifficulty(0.7) === "Sedang", "P = 0.70 = Sedang");
+  assert(context.categorizeDifficulty(0.71) === "Mudah", "P > 0.70 = Mudah");
+
+  assert(context.categorizeDiscrimination(0.4) === "Sangat Baik", "D >= 0.40 = Sangat Baik");
+  assert(context.categorizeDiscrimination(0.3) === "Baik", "D 0.30-0.39 = Baik");
+  assert(context.categorizeDiscrimination(0.2) === "Cukup", "D 0.20-0.29 = Cukup");
+  assert(context.categorizeDiscrimination(0.19) === "Kurang", "D < 0.20 = Kurang");
+
+  assert(context.categorizeReliability(0.9) === "Sangat Tinggi", "KR-20 >= 0.90 = Sangat Tinggi");
+  assert(context.categorizeReliability(0.7) === "Tinggi", "KR-20 0.70-0.89 = Tinggi");
+  assert(context.categorizeReliability(0.5) === "Sedang", "KR-20 0.50-0.69 = Sedang");
+  assert(context.categorizeReliability(0.49) === "Rendah", "KR-20 < 0.50 = Rendah");
+  assert(context.sampleVariance([1, 2, 3]) === 1, "Varians total memakai varians sampel");
+  checks.push({ check: "Batas kategori dan varians KR-20 akurat" });
 }
 
 function testExports(results) {

@@ -280,7 +280,7 @@ function analyzeMatrix(data) {
   });
 
   const totalScores = respondents.map((respondent) => respondent.total);
-  const totalVariance = populationVariance(totalScores);
+  const totalVariance = sampleVariance(totalScores);
   const sorted = [...respondents].sort((a, b) => b.total - a.total || a.name.localeCompare(b.name));
   const groupSize = Math.max(1, Math.round(n * 0.27));
   const upperGroup = sorted.slice(0, groupSize);
@@ -475,7 +475,7 @@ function renderResults(results) {
   els.reliabilityCards.innerHTML = [
     metricCard("Jumlah Soal (k)", results.reliability.k),
     metricCard("Σpq", round(results.reliability.pqSum, 3)),
-    metricCard("Varians Total", round(results.reliability.totalVariance, 3)),
+    metricCard("Varians Total (s²)", round(results.reliability.totalVariance, 3)),
     metricCard("KR-20", results.reliability.kr20),
     metricCard("Kategori", results.reliability.category)
   ].join("");
@@ -508,12 +508,12 @@ function buildDiscriminationInsight(items) {
   const counts = countBy(items.map((item) => item.category));
   return `
     <h3>Hasil daya pembeda</h3>
-    <p>Butir dengan daya pembeda baik perlu dipertahankan, sedangkan kategori jelek atau buruk perlu diperiksa lagi.</p>
+    <p>Butir dengan daya pembeda baik atau sangat baik perlu dipertahankan, sedangkan kategori kurang perlu diperiksa lagi.</p>
     <ul>
       <li>Sangat Baik: ${counts["Sangat Baik"] || 0}</li>
       <li>Baik: ${counts.Baik || 0}</li>
       <li>Cukup: ${counts.Cukup || 0}</li>
-      <li>Jelek/Buruk: ${(counts.Jelek || 0) + (counts.Buruk || 0)}</li>
+      <li>Kurang: ${counts.Kurang || 0}</li>
     </ul>
   `;
 }
@@ -622,7 +622,7 @@ function buildAiRecommendationPayload(results) {
         })
         .filter((item) => (
           item.difficulty !== "Sedang"
-          || ["Jelek", "Buruk"].includes(item.discrimination)
+          || item.discrimination === "Kurang"
           || item.validity === "Tidak Valid"
         ))
         .slice(0, 30)
@@ -771,17 +771,16 @@ function defaultRespondentName(index) {
 }
 
 function categorizeDifficulty(value) {
-  if (value <= 0.3) return "Sukar";
+  if (value < 0.3) return "Sukar";
   if (value <= 0.7) return "Sedang";
   return "Mudah";
 }
 
 function categorizeDiscrimination(value) {
-  if (value < 0) return "Buruk";
-  if (value < 0.2) return "Jelek";
-  if (value < 0.4) return "Cukup";
-  if (value < 0.7) return "Baik";
-  return "Sangat Baik";
+  if (value >= 0.4) return "Sangat Baik";
+  if (value >= 0.3) return "Baik";
+  if (value >= 0.2) return "Cukup";
+  return "Kurang";
 }
 
 function categorizeValidity(value, threshold) {
@@ -797,11 +796,10 @@ function categorizeValidity(value, threshold) {
 }
 
 function categorizeReliability(value) {
-  if (value >= 0.8) return "Sangat Tinggi";
-  if (value >= 0.6) return "Tinggi";
-  if (value >= 0.4) return "Cukup";
-  if (value >= 0.2) return "Rendah";
-  return "Sangat Rendah";
+  if (value >= 0.9) return "Sangat Tinggi";
+  if (value >= 0.7) return "Tinggi";
+  if (value >= 0.5) return "Sedang";
+  return "Rendah";
 }
 
 function correlationSums(x, y) {
@@ -823,10 +821,10 @@ function pearsonFromSums(sums) {
   return denominator === 0 ? 0 : numerator / denominator;
 }
 
-function populationVariance(values) {
-  if (!values.length) return 0;
+function sampleVariance(values) {
+  if (values.length < 2) return 0;
   const avg = average(values);
-  return values.reduce((sum, value) => sum + ((value - avg) ** 2), 0) / values.length;
+  return values.reduce((sum, value) => sum + ((value - avg) ** 2), 0) / (values.length - 1);
 }
 
 function parseOptionalThreshold(value) {
@@ -863,7 +861,7 @@ function formatCell(value) {
   const text = escapeHtml(String(value ?? ""));
   if (["Valid", "Tinggi", "Sangat Tinggi", "Baik", "Sangat Baik"].includes(value)) return `<span class="badge success">${text}</span>`;
   if (["Cukup", "Sedang", "Mudah"].includes(value)) return `<span class="badge warning">${text}</span>`;
-  if (["Tidak Valid", "Rendah", "Sangat Rendah", "Buruk", "Jelek", "Sukar"].includes(value)) return `<span class="badge danger">${text}</span>`;
+  if (["Tidak Valid", "Rendah", "Kurang", "Sukar"].includes(value)) return `<span class="badge danger">${text}</span>`;
   return text;
 }
 
