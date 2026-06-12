@@ -7,7 +7,7 @@ import { fileURLToPath } from "node:url";
 const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(here, "..");
 
-const xlsxCode = await (await fetch("https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js")).text();
+const xlsxCode = await (await fetch("https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js")).text();
 const appCode = await fs.readFile(path.join(root, "script.js"), "utf8");
 
 const context = createBrowserLikeContext();
@@ -53,6 +53,8 @@ function testTemplateDownload() {
   assert(captured.workbook.SheetNames.includes("Matriks"), 'Template punya sheet "Matriks"');
   const rows = context.XLSX.utils.sheet_to_json(captured.workbook.Sheets.Matriks, { header: 1, defval: "" });
   assert(rows[0].join("|") === "Nama|S1|S2|S3|S4|S5", "Header template matriks sesuai");
+  assert(captured.workbook.Sheets.Matriks["!cols"]?.[0]?.wch >= 8, "Template punya auto-width kolom");
+  assert(Boolean(captured.workbook.Sheets.Matriks.A1?.s?.border), "Template punya border tabel");
   checks.push({ check: "Template matriks bisa dibuat", fileName: captured.fileName });
 }
 
@@ -162,6 +164,8 @@ function testExports(results) {
   context.exportExcelReport();
   assert(excelCapture.fileName === "laporan-butircerdas.xlsx", "Export Excel memakai nama benar");
   assert(["Ringkasan", "Skor Responden", "Kesukaran", "Daya Pembeda", "Validitas", "Reliabilitas"].every((sheet) => excelCapture.workbook.SheetNames.includes(sheet)), "Export Excel punya sheet analisis terpisah");
+  assert(excelCapture.workbook.Sheets.Ringkasan["!cols"]?.[0]?.wch >= 20, "Export Excel punya lebar kolom otomatis");
+  assert(Boolean(excelCapture.workbook.Sheets.Ringkasan.A1?.s?.border), "Export Excel punya border tabel");
 
   const pdfCapture = { text: [], tables: [], saved: "" };
   context.window.jspdf.jsPDF = class {

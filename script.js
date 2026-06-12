@@ -125,7 +125,7 @@ function downloadTemplate() {
     Subject: subject,
     Comments: "ButirCerdas matrix 1/0"
   };
-  XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet([headers, ...sampleRows]), "Matriks");
+  XLSX.utils.book_append_sheet(workbook, createStyledWorksheet([headers, ...sampleRows], { headerRows: 1 }), "Matriks");
   XLSX.writeFile(workbook, `template-butircerdas-matriks-${count}-soal.xlsx`);
   showMessage("Template matriks berhasil dibuat. Isi nilai 1 untuk benar dan 0 untuk salah.", "success");
 }
@@ -655,7 +655,7 @@ function exportExcelReport() {
   const results = state.results;
   const workbook = XLSX.utils.book_new();
 
-  XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet([
+  XLSX.utils.book_append_sheet(workbook, createStyledWorksheet([
     ["ButirCerdas - Ringkasan"],
     ["Nama Ujian", results.meta.examName],
     ["Mata Pelajaran", results.meta.subject],
@@ -666,13 +666,13 @@ function exportExcelReport() {
     ["Nilai Terendah", results.summary.lowest],
     ["Reliabilitas KR-20", results.reliability.kr20],
     ["Kategori Reliabilitas", results.reliability.category]
-  ]), "Ringkasan");
+  ], { titleRows: 1 }), "Ringkasan");
 
-  XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet(tableToRows(els.scoreTable)), "Skor Responden");
-  XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet(tableToRows(els.difficultyTable)), "Kesukaran");
-  XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet(tableToRows(els.discriminationTable)), "Daya Pembeda");
-  XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet(tableToRows(els.validityTable)), "Validitas");
-  XLSX.utils.book_append_sheet(workbook, XLSX.utils.aoa_to_sheet(tableToRows(els.reliabilityTable)), "Reliabilitas");
+  XLSX.utils.book_append_sheet(workbook, createStyledWorksheet(tableToRows(els.scoreTable), { headerRows: 1 }), "Skor Responden");
+  XLSX.utils.book_append_sheet(workbook, createStyledWorksheet(tableToRows(els.difficultyTable), { headerRows: 1 }), "Kesukaran");
+  XLSX.utils.book_append_sheet(workbook, createStyledWorksheet(tableToRows(els.discriminationTable), { headerRows: 1 }), "Daya Pembeda");
+  XLSX.utils.book_append_sheet(workbook, createStyledWorksheet(tableToRows(els.validityTable), { headerRows: 1 }), "Validitas");
+  XLSX.utils.book_append_sheet(workbook, createStyledWorksheet(tableToRows(els.reliabilityTable), { headerRows: 1 }), "Reliabilitas");
   XLSX.writeFile(workbook, "laporan-butircerdas.xlsx");
 }
 
@@ -855,6 +855,68 @@ function tableToRows(table) {
   const header = [...table.querySelectorAll("thead th")].map((cell) => cell.textContent);
   const body = [...table.querySelectorAll("tbody tr")].map((row) => [...row.querySelectorAll("td")].map((cell) => cell.textContent));
   return [header, ...body];
+}
+
+function createStyledWorksheet(rows, options = {}) {
+  const sheet = XLSX.utils.aoa_to_sheet(rows);
+  const rangeRef = sheet["!ref"];
+  if (!rangeRef) return sheet;
+
+  const range = XLSX.utils.decode_range(rangeRef);
+  const widths = [];
+  const headerRows = options.headerRows || 0;
+  const titleRows = options.titleRows || 0;
+
+  for (let rowIndex = range.s.r; rowIndex <= range.e.r; rowIndex += 1) {
+    for (let colIndex = range.s.c; colIndex <= range.e.c; colIndex += 1) {
+      const address = XLSX.utils.encode_cell({ r: rowIndex, c: colIndex });
+      const cell = sheet[address];
+      if (!cell) continue;
+
+      const valueLength = String(cell.v ?? "").length;
+      widths[colIndex] = Math.max(widths[colIndex] || 8, Math.min(42, valueLength + 3));
+      cell.s = buildExcelCellStyle({
+        isHeader: rowIndex < headerRows,
+        isTitle: rowIndex < titleRows
+      });
+    }
+  }
+
+  sheet["!cols"] = widths.map((width) => ({ wch: Math.max(8, width || 8) }));
+  return sheet;
+}
+
+function buildExcelCellStyle({ isHeader = false, isTitle = false } = {}) {
+  const base = {
+    border: {
+      top: { style: "thin", color: { rgb: "B7C9C4" } },
+      right: { style: "thin", color: { rgb: "B7C9C4" } },
+      bottom: { style: "thin", color: { rgb: "B7C9C4" } },
+      left: { style: "thin", color: { rgb: "B7C9C4" } }
+    },
+    alignment: {
+      vertical: "center",
+      wrapText: true
+    }
+  };
+
+  if (isHeader) {
+    return {
+      ...base,
+      font: { bold: true, color: { rgb: "0B3D38" } },
+      fill: { fgColor: { rgb: "DDF3EE" } }
+    };
+  }
+
+  if (isTitle) {
+    return {
+      ...base,
+      font: { bold: true, sz: 14, color: { rgb: "0B3D38" } },
+      fill: { fgColor: { rgb: "EEF8F5" } }
+    };
+  }
+
+  return base;
 }
 
 function formatCell(value) {
