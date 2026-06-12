@@ -111,11 +111,13 @@ button {
 }
 
 .page-nav {
+  flex: 1;
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   justify-content: flex-end;
-  gap: 6px;
-  max-width: min(760px, 66vw);
+  gap: 4px;
+  max-width: none;
+  min-width: 0;
 }
 
 .menu-toggle {
@@ -124,13 +126,14 @@ button {
 
 .nav-btn {
   min-height: 36px;
-  padding: 7px 12px;
+  padding: 7px 10px;
   border: 1px solid transparent;
   border-radius: 999px;
   background: transparent;
   color: #33423e;
   cursor: pointer;
   font-weight: 700;
+  font-size: clamp(0.82rem, 0.92vw, 0.95rem);
   white-space: nowrap;
 }
 

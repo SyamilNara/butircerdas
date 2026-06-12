@@ -23,7 +23,7 @@ module.exports = async function handler(req, res) {
       "2. Masalah utama",
       "3. Saran perbaikan",
       "4. Prioritas tindak lanjut",
-      "Tulis 180 sampai 260 kata. Gunakan bahasa yang jelas untuk guru. Jangan menyebut distraktor.",
+      "Tulis 120 sampai 180 kata. Gunakan bahasa yang jelas untuk guru. Jangan menyebut distraktor.",
       JSON.stringify(payload, null, 2)
     ].join("\n\n");
 
@@ -38,14 +38,14 @@ module.exports = async function handler(req, res) {
         ],
         generationConfig: {
           temperature: 0.25,
-          maxOutputTokens: 1800
+          maxOutputTokens: 4096
         }
       }
     });
 
     const recommendation = data.candidates?.[0]?.content?.parts?.map((part) => part.text).join("\n").trim();
     const finishReason = data.candidates?.[0]?.finishReason;
-    if (finishReason === "MAX_TOKENS") {
+    if (finishReason === "MAX_TOKENS" && !recommendation) {
       res.status(502).json({ error: "Respons Gemini terpotong karena batas output. Coba ulangi rekomendasi AI." });
       return;
     }
